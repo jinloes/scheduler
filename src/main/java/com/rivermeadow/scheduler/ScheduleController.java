@@ -1,5 +1,7 @@
 package com.rivermeadow.scheduler;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -39,6 +41,12 @@ public class ScheduleController {
 
     @RequestMapping(method = RequestMethod.POST)
     String scheduleTask() {
+
+        CuratorFramework framework = CuratorFrameworkFactory.builder()
+                .connectString("localhost:2181")
+                .namespace("scheduler")
+                .build();
+        framework.start();
         JobDetail jobDetail = JobBuilder.newJob(TestJob.class)
                 .withIdentity("my id")
                 .build();
