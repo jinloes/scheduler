@@ -11,12 +11,17 @@ import org.apache.curator.framework.recipes.queue.QueueBuilder;
 import org.apache.curator.framework.recipes.queue.QueueConsumer;
 import org.apache.curator.framework.recipes.queue.QueueSerializer;
 import org.apache.curator.retry.RetryUntilElapsed;
+import org.apache.curator.test.InstanceSpec;
+import org.apache.curator.test.TestingServer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Application configuration and bean definitions.
@@ -27,12 +32,13 @@ import org.springframework.context.annotation.Configuration;
 public class Application {
 
     @Bean
-    public CuratorFramework getCurator() {
+    @Autowired
+    public CuratorFramework getCurator(@Qualifier("connectString") final String connectString) {
         CuratorFramework curator = CuratorFrameworkFactory.builder()
                 .retryPolicy(new RetryUntilElapsed(
                         (int) TimeUnit.SECONDS.toMillis(5),
                         (int) TimeUnit.SECONDS.toSeconds(1)))
-                .connectString("localhost:2181")
+                .connectString(connectString)
                 .namespace("scheduler")
                 .build();
         curator.start();
@@ -51,6 +57,19 @@ public class Application {
             throw new RuntimeException("Could not create job queue.");
         }
         return jobQueue;
+    }
+
+    @Bean
+    @Profile("default")
+    public String connectString(@Value("${zookeeper.connect-string:localhost:2181}") final String connectString) {
+        return connectString;
+    }
+
+    @Bean
+    @Profile("test")
+    public String connectString() throws Exception{
+        TestingServer testingServer = new TestingServer(InstanceSpec.newInstanceSpec());
+        return testingServer.getConnectString();
     }
 
     public static void main(String[] args) throws Exception {

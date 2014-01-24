@@ -1,0 +1,12 @@
+{
+    "task": {
+        "method": "POST",
+        "url": "www.url.com",
+        "body": {
+            "user": "marco",
+            "foo": "bar"
+        },
+        "expected_range": "200-300"
+    },
+    "schedule": "2014-01-24T12:28:27-08:00"
+}
