@@ -11,7 +11,6 @@ import org.springframework.util.SerializationUtils;
  */
 @Component
 public class JobQueueSerializer implements QueueSerializer<Job> {
-
     @Override
     public byte[] serialize(Job item) {
         return SerializationUtils.serialize(item);
