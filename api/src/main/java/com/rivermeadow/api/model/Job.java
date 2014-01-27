@@ -32,4 +32,11 @@ public interface Job extends Serializable {
      * @return task
      */
     Task getTask();
+
+    /**
+     * Returns a job's uri scheme.
+     *
+     * @return uri scheme.
+     */
+    String getUriScheme();
 }

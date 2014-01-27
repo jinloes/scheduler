@@ -26,14 +26,11 @@ public class JobControllerImpl implements JobController<JobImpl> {
         this.jobDao = jobDao;
     }
 
-    String getTasks() {
-        return "Hello World!";
-    }
-
     @Override
     @JsonPost
     public ResponseEntity scheduleJob(@RequestBody @Valid final JobImpl job) {
         jobDao.addJob(job);
+        //TODO(jinloes) add id and link to job
         return new ResponseEntity("Task scheduled!", HttpStatus.CREATED);
     }
 }

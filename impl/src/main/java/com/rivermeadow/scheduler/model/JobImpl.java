@@ -1,5 +1,10 @@
 package com.rivermeadow.scheduler.model;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import javax.validation.Valid;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -38,9 +43,19 @@ public class JobImpl implements Job {
         return scheduleDate;
     }
 
+    @Valid
     @Override
     public Task getTask() {
         return task;
+    }
+
+    @Override
+    public String getUriScheme() {
+        try {
+            return new URI(task.getUri()).getScheme();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Unable to get URI scheme.");
+        }
     }
 
     @Override

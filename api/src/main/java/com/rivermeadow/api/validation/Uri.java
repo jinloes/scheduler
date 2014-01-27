@@ -9,15 +9,15 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 
 /**
- * Validates a schedule field of a job.
+ * Validates a job's target uri.
  */
 @Documented
-@Constraint(validatedBy = ScheduleValidator.class)
+@Constraint(validatedBy = UriValidator.class)
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Schedule {
+public @interface Uri {
     //TODO(jinloes) use ValidationMessage.properties file
-    public abstract String message() default "Invalid date. Must be ISO8601 format or value 'now'.";
+    public abstract String message() default "Invalid uri scheme. Supported schemes are http.";
 
     public abstract Class[] groups() default {};
 

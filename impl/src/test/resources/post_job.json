@@ -1,7 +1,7 @@
 {
     "task": {
         "method": "POST",
-        "url": "www.url.com",
+        "uri": "http://www.url.com",
         "body": {
             "user": "marco",
             "foo": "bar"

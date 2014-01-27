@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Application configuration and bean definitions.
@@ -30,16 +31,18 @@ import org.springframework.context.annotation.Profile;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"com.rivermeadow.scheduler"})
 public class Application {
+    private static final String SCHEDULER_NAMESPACE = "scheduler";
 
     @Bean
     @Autowired
     public CuratorFramework getCurator(@Qualifier("connectString") final String connectString) {
+        //TODO(jinloes) make retry time configurable
         CuratorFramework curator = CuratorFrameworkFactory.builder()
                 .retryPolicy(new RetryUntilElapsed(
                         (int) TimeUnit.SECONDS.toMillis(5),
                         (int) TimeUnit.SECONDS.toSeconds(1)))
                 .connectString(connectString)
-                .namespace("scheduler")
+                .namespace(SCHEDULER_NAMESPACE)
                 .build();
         curator.start();
         return curator;

@@ -2,12 +2,8 @@ package com.rivermeadow.scheduler.dao;
 
 import com.rivermeadow.api.dao.JobDAO;
 import com.rivermeadow.api.model.Job;
-import com.rivermeadow.scheduler.util.JobQueueSerializer;
 
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.queue.DistributedDelayQueue;
-import org.apache.curator.framework.recipes.queue.DistributedPriorityQueue;
-import org.apache.curator.framework.recipes.queue.QueueSerializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -28,6 +24,7 @@ public class ZookeeperJobDAO implements JobDAO {
         try {
             jobQueue.put(job, job.getScheduleDate().getMillis());
         } catch (Exception e) {
+            //TODO(jinloes) clean up and add better error message
             e.printStackTrace();
             throw new RuntimeException("Failed to add task to queue");
         }

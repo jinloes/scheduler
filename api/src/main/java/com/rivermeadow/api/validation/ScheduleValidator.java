@@ -9,7 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.ISODateTimeFormat;
 
 /**
- * Created by jinloes on 1/23/14.
+ * See {@link com.rivermeadow.api.validation.Schedule}. Validats that the 'schedule' field is either the value 'now'
+ * or an ISO8601 datetime string.
  */
 public class ScheduleValidator implements ConstraintValidator<Schedule, String> {
     @Override
