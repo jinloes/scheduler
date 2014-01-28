@@ -63,7 +63,7 @@ public class JobControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id", not(isEmptyOrNullString())))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status", equalTo(Job.Status.PENDING.toString())))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status", equalTo(Job.Status.RUNNING.toString())))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.uri", equalTo("http://www.url.com")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.method", equalTo("POST")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.expected_range", equalTo("200-300")))

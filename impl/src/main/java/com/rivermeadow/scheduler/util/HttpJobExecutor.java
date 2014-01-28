@@ -29,8 +29,10 @@ public class HttpJobExecutor implements JobExecutor {
 
     @Override
     public void execute(Job job) {
-        //TODO(jinloes) remove this
-        System.out.println("Running job.");
+        //TODO(jinloes) can probably move the status updates to an abstract class
+        // Job is about to run, so update status
+        job.setStatus(Job.Status.RUNNING);
+        jobDAO.updateJob(job);
         try {
             //TODO(jinloes) add other methods
             switch(job.getTask().getMethod().toLowerCase()) {
