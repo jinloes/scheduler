@@ -1,37 +1,73 @@
 package com.rivermeadow.scheduler.web;
 
+import java.util.Map;
+
+import com.jayway.jsonpath.JsonPath;
+import com.rivermeadow.api.model.Job;
+import com.rivermeadow.api.web.JobController;
+
 import org.apache.commons.io.IOUtils;
+import org.cthul.matchers.CthulMatchers;
+import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static org.hamcrest.Matchers.*;
+
 /**
  * Tests for {@link com.rivermeadow.api.web.JobController}.
  */
-@WebAppConfiguration
+@ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
+@WebAppConfiguration
 @SpringApplicationConfiguration(classes = Application.class)
-@Profile("test")
 public class JobControllerTest {
+    private static final String UUID_REGEX = "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
+    private static final String JOBS_REGEX = "/jobs/" + UUID_REGEX;
     @Autowired
     private WebApplicationContext wac;
+    private MockMvc mockMvc;
+
+    @Before
+    public void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+    }
 
     @Test
-    public void test() throws Exception {
+    public void testScheduleJob() throws Exception {
         String json = IOUtils.toString(getClass().getClassLoader().getResourceAsStream("post_job.json"));
-        MockMvcBuilders.webAppContextSetup(wac).build().perform(MockMvcRequestBuilders.post("/jobs")
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(JobController.ROOT_JOB_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id", CthulMatchers.matchesPattern((UUID_REGEX))))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.link", CthulMatchers.matchesPattern(JOBS_REGEX)))
+                .andReturn();
+        String id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
+        String jobsPath = String.format(JobController.JOB_LINK, id);
+        mockMvc.perform(MockMvcRequestBuilders.get(jobsPath))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id", not(isEmptyOrNullString())))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status", equalTo(Job.Status.PENDING.toString())))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.uri", equalTo("http://www.url.com")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.method", equalTo("POST")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.expected_range", equalTo("200-300")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.body.user", equalTo("marco")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.body.foo", equalTo("bar")));
     }
 }

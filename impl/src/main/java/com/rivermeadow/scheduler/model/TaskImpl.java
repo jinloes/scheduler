@@ -7,8 +7,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.rivermeadow.api.model.Task;
+import com.rivermeadow.api.validation.Uri;
 
 import org.apache.commons.lang3.Range;
+import org.hibernate.validator.constraints.URL;
 
 /**
  * {@link Task} implementation.

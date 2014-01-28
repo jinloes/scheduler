@@ -2,6 +2,9 @@ package com.rivermeadow.scheduler.web;
 
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.rivermeadow.api.model.Job;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -21,6 +24,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,6 +37,12 @@ import org.springframework.web.client.RestTemplate;
 public class Application {
     private static final String SCHEDULER_NAMESPACE = "scheduler";
 
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper()
+                .registerModule(new JodaModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
     @Bean
     @Autowired
     public CuratorFramework getCurator(@Qualifier("connectString") final String connectString) {
@@ -63,19 +73,31 @@ public class Application {
     }
 
     @Bean
-    @Profile("default")
-    public String connectString(@Value("${zookeeper.connect-string:localhost:2181}") final String connectString) {
-        return connectString;
-    }
-
-    @Bean
-    @Profile("test")
-    public String connectString() throws Exception{
-        TestingServer testingServer = new TestingServer(InstanceSpec.newInstanceSpec());
-        return testingServer.getConnectString();
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate();
     }
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(Application.class, args);
+    }
+
+    @Configuration
+    @Profile("test")
+    public static class TestApplication {
+        @Bean
+        public String connectString() throws Exception{
+            TestingServer testingServer = new TestingServer(InstanceSpec.newInstanceSpec());
+            return testingServer.getConnectString();
+        }
+    }
+
+    @Configuration
+    @Profile("default")
+    public static class DefaultApplication {
+        @Bean
+        public String connectString(
+                @Value("#{systemProperties['zookeeper.connect_url']?:'localhost:2181'}") final String connectString) {
+            return connectString;
+        }
     }
 }

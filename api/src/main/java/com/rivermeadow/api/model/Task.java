@@ -3,12 +3,15 @@ package com.rivermeadow.api.model;
 import java.io.Serializable;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.rivermeadow.api.util.RangeSerializer;
 import com.rivermeadow.api.validation.Uri;
 
 import org.apache.commons.lang3.Range;
 
 /**
- * Created by jinloes on 1/23/14.
+ * A task that a {@link Job} will execute.
  */
 public interface Task extends Serializable {
     /**
@@ -38,5 +41,7 @@ public interface Task extends Serializable {
      *
      * @return expected response code range
      */
+    @JsonProperty("expected_range")
+    @JsonSerialize(using = RangeSerializer.class)
     Range<Integer> getExpectedRange();
 }
