@@ -20,7 +20,7 @@ Architecture
 The system is designed to be fully distributed, highly available, and resilient to
 failures. If a job is being executed and a scheduler node fails, then the job will be requeued to
 be executed immediately by another scheduler node. The scheduler system is backed by a Zookeeper_
-ensemble to provide the features previously described. The diagram below
+ensemble to provide the features previously described. The diagram below shows a typical workflow.
 
 .. image:: docs/images/architecture.png
     :width: 400px
