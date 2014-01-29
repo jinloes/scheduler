@@ -3,7 +3,7 @@ Scheduler
 =========
 
 :Date: 2014-1-29
-:Author: J. Inloes
+:Author: Jonathan Inloes
 :Version: 0.1
 :Updated: 2014-01-29
 
@@ -23,52 +23,55 @@ be executed immediately by another scheduler node. The scheduler system is backe
 ensemble to provide the features previously described. The diagram below
 
 .. image:: docs/images/architecture.png
-:width: 400px
+    :width: 400px
     :alt: scheduler architecture
 
 REST API
 ^^^^^^^^^^
 
-Servers currently under monitoring and active::
+Queue a job to be run at the scheduled date::
 
     POST /jobs
-        Queues a job to be run at the scheduled date.
-
-        Example POST body::
-        {
-            "task": {
-                "method": "POST",
-                "uri": "http://www.myserver.com",
-                "body": {
-                    "user": "marco",
-                    "foo": "bar"
-                },
-                "expected_range": "200-300"
+    
+    Request:
+    {
+        "task": {
+            "method": "POST",
+            "uri": "http://www.myserver.com",
+            "body": {
+                "user": "marco",
+                "foo": "bar"
             },
-            "schedule": "2014-01-24T12:28:27-08:00" #ISO8601 datetime or value 'now'
-        }
+            "expected_range": "200-300"
+        },
+        "schedule": "2014-01-24T12:28:27-08:00" #ISO8601 datetime or value 'now'
+    }
+    
+    Response:
+    {
+        "id": <uuid>,
+        "link": "/jobs/<uuid>"
+    }
 
-        Example POST response::
-        {
-            "id": <uuid>,
-            "link": "/jobs/<uuid>"
-        }
+Retrieve a job::
 
     GET /jobs/{jobId}
-        Returns a job for the given job id.
 
-        Example GET response::
-        {
-            "id": <uuid>,
-            "task": {
-                "method": "POST",
-                "uri": "http://www.myserver.com",
-                "body": {
-                    "user": "marco",
-                    "foo": "bar"
-                },
-                "expected_range": "200-300"
+    Response:
+    {
+        "id": <uuid>,
+        "task": {
+            "method": "POST",
+            "uri": "http://www.myserver.com",
+            "body": {
+                "user": "marco",
+                "foo": "bar"
             },
-            "schedule": "2014-01-24T12:28:27-08:00"
-        }
+            "expected_range": "200-300"
+        },
+        "schedule": "2014-01-24T12:28:27-08:00"
+    }
 
+.. Links:
+
+.. _Zookeeper: http://zookeeper.apache.org/
