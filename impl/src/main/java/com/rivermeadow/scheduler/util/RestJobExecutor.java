@@ -17,12 +17,12 @@ import org.springframework.web.client.RestTemplate;
  * {@link JobExecutor} that handles http scheme.
  */
 @Component("http")
-public class HttpJobExecutor implements JobExecutor {
+public class RestJobExecutor implements JobExecutor {
     private final RestTemplate restTemplate;
     private final JobDAO jobDAO;
 
     @Autowired
-    public HttpJobExecutor(final RestTemplate restTemplate, final JobDAO jobDAO) {
+    public RestJobExecutor(final RestTemplate restTemplate, final JobDAO jobDAO) {
         this.restTemplate = restTemplate;
         this.jobDAO = jobDAO;
     }
