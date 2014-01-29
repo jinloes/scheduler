@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
  * Controller for scheduling jobs.
  */
 public interface JobController<T extends Job>{
+    static final String ROOT_JOB_PATH = "/jobs";
+    static final String JOB_LINK = ROOT_JOB_PATH + "/%s";
     /**
      * Queues up a job.
      *
@@ -16,4 +18,13 @@ public interface JobController<T extends Job>{
      * @return value
      */
     ResponseEntity scheduleJob(T job);
+
+    /**
+     * Returns a job for a given job id.
+     *
+     * @param jobId job id
+     *
+     * @return job
+     */
+    Job getJob(String jobId);
 }

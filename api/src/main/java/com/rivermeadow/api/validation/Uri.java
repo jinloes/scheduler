@@ -13,7 +13,7 @@ import javax.validation.Constraint;
  */
 @Documented
 @Constraint(validatedBy = UriValidator.class)
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Uri {
     //TODO(jinloes) use ValidationMessage.properties file

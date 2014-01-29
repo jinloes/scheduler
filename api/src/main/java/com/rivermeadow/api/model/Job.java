@@ -1,7 +1,11 @@
 package com.rivermeadow.api.model;
 
 import java.io.Serializable;
+import java.util.UUID;
 
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.rivermeadow.api.validation.Schedule;
 
 import org.joda.time.DateTime;
@@ -10,27 +14,29 @@ import org.joda.time.DateTime;
  * Job interface
  */
 public interface Job extends Serializable {
+    enum Status {
+        ERROR,
+        PENDING,
+        RUNNING,
+        SUCCESS
+    }
+
     public static final String NOW = "now";
 
-    /**
-     * Returns job's schedule time. The value is either 'now' or an ISO8601 format date string.
-     *
-     * @return schedule value
-     */
-    @Schedule
-    String getSchedule();
+    UUID getId();
 
     /**
      * Returns a job's sechdule time as a {@link DateTime}.
      * @return
      */
-    DateTime getScheduleDate();
+    DateTime getSchedule();
 
     /**
      * Returns job's task.
      *
      * @return task
      */
+    @Valid
     Task getTask();
 
     /**
@@ -38,5 +44,10 @@ public interface Job extends Serializable {
      *
      * @return uri scheme.
      */
+    @JsonIgnore
     String getUriScheme();
+
+    Status getStatus();
+
+    void setStatus(Status status);
 }
