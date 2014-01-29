@@ -52,6 +52,7 @@ public class HttpJobExecutor implements JobExecutor {
             // Return gracefully because we don't want a job with an http error to be requeued
             job.setStatus(Job.Status.ERROR);
             jobDAO.updateJob(job);
+            return;
         }
         // Job completed successfully update and return
         job.setStatus(Job.Status.SUCCESS);

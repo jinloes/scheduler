@@ -24,22 +24,18 @@ public class JobImpl implements Job {
 
     private final UUID id;
     private final Task task;
+    @Schedule
     private final String schedule;
-    private final DateTime scheduleDate;
+    private DateTime scheduleDate;
     private Status status;
 
     @JsonCreator
-    private JobImpl(@JsonProperty("task") @Valid final TaskImpl task,
-                    @JsonProperty("schedule") @Schedule final String schedule) {
+    private JobImpl(@JsonProperty("task") final TaskImpl task,
+                    @JsonProperty("schedule") final String schedule) {
         this.id = UUID.randomUUID();
         this.task = task;
         this.schedule = schedule;
         this.status = Status.PENDING;
-        if(NOW.equals(schedule)) {
-            scheduleDate = new DateTime();
-        } else {
-            scheduleDate = ISODateTimeFormat.dateOptionalTimeParser().parseDateTime(schedule);
-        }
     }
 
     @Override
@@ -49,6 +45,15 @@ public class JobImpl implements Job {
 
     @Override
     public DateTime getSchedule() {
+        if(scheduleDate != null) {
+            return scheduleDate;
+        }
+        // Lazily initialize the schedule date
+        if(NOW.equals(schedule)) {
+            scheduleDate = new DateTime();
+        } else {
+            scheduleDate = ISODateTimeFormat.dateOptionalTimeParser().parseDateTime(schedule);
+        }
         return scheduleDate;
     }
 
