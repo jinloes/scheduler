@@ -13,7 +13,7 @@ import javax.validation.Constraint;
  */
 @Documented
 @Constraint(validatedBy = ScheduleValidator.class)
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Schedule {
     //TODO(jinloes) use ValidationMessage.properties file
