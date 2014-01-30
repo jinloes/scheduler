@@ -21,12 +21,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.embedded.ServletRegistrationBean;
+import org.springframework.boot.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.DispatcherServlet;
 
 /**
  * Application configuration and bean definitions.
@@ -34,8 +38,25 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"com.rivermeadow.scheduler"})
-public class Application {
+public class ApplicationInitializer extends SpringBootServletInitializer {
     private static final String SCHEDULER_NAMESPACE = "scheduler";
+    private static final String APPLICATION_ROOT_PATH = "/api/v1/*";
+
+    public static void main(String[] args) throws Exception {
+        SpringApplication.run(ApplicationInitializer.class, args);
+    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(ApplicationInitializer.class);
+    }
+
+    @Bean
+    public ServletRegistrationBean dispatcherRegistration(DispatcherServlet dispatcherServlet) {
+        ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet);
+        registration.addUrlMappings(APPLICATION_ROOT_PATH);
+        return registration;
+    }
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -75,10 +96,6 @@ public class Application {
     @Bean
     public RestTemplate getRestTemplate() {
         return new RestTemplate();
-    }
-
-    public static void main(String[] args) throws Exception {
-        SpringApplication.run(Application.class, args);
     }
 
     @Configuration

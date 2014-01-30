@@ -31,8 +31,8 @@ REST API
 
 Queue a job to be run at the scheduled date::
 
-    POST /jobs
-    
+    POST /api/v1/jobs
+
     Request:
     {
         "task": {
@@ -46,7 +46,7 @@ Queue a job to be run at the scheduled date::
         },
         "schedule": "2014-01-24T12:28:27-08:00" #ISO8601 datetime or value 'now'
     }
-    
+
     Response:
     {
         "id": <uuid>,
@@ -55,7 +55,7 @@ Queue a job to be run at the scheduled date::
 
 Retrieve a job::
 
-    GET /jobs/{jobId}
+    GET /api/v1/jobs/{jobId}
 
     Response:
     {

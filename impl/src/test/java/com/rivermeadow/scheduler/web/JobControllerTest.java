@@ -33,9 +33,10 @@ import static org.hamcrest.Matchers.*;
 @ActiveProfiles("test")
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
-@SpringApplicationConfiguration(classes = Application.class)
+@SpringApplicationConfiguration(classes = ApplicationInitializer.class)
 public class JobControllerTest {
-    private static final String UUID_REGEX = "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
+    private static final String UUID_REGEX =
+            "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
     private static final String JOBS_REGEX = "/jobs/" + UUID_REGEX;
     @Autowired
     private WebApplicationContext wac;
@@ -48,14 +49,17 @@ public class JobControllerTest {
 
     @Test
     public void testScheduleJob() throws Exception {
-        String json = IOUtils.toString(getClass().getClassLoader().getResourceAsStream("post_job.json"));
+        String json = IOUtils.toString(getClass().getClassLoader()
+                .getResourceAsStream("post_job.json"));
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(JobController.ROOT_JOB_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id", CthulMatchers.matchesPattern((UUID_REGEX))))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.link", CthulMatchers.matchesPattern(JOBS_REGEX)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id",
+                        CthulMatchers.matchesPattern((UUID_REGEX))))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.link",
+                        CthulMatchers.matchesPattern(JOBS_REGEX)))
                 .andReturn();
         String id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
         String jobsPath = String.format(JobController.JOB_LINK, id);
@@ -63,10 +67,13 @@ public class JobControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id", not(isEmptyOrNullString())))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status", equalTo(Job.Status.RUNNING.toString())))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.uri", equalTo("http://www.url.com")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status",
+                        equalTo(Job.Status.RUNNING.toString())))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.uri",
+                        equalTo("http://www.url.com")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.method", equalTo("POST")))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.expected_range", equalTo("200-300")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.task.expected_range",
+                        equalTo("200-300")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.body.user", equalTo("marco")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.body.foo", equalTo("bar")));
     }
