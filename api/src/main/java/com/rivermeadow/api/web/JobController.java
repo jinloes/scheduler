@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
  */
 public interface JobController<T extends Job>{
     static final String ROOT_JOB_PATH = "/jobs";
-    static final String JOB_LINK = ROOT_JOB_PATH + "/%s";
+    static final String JOB_LINK = "%s" + ROOT_JOB_PATH + "/%s";
     /**
      * Queues up a job.
      *

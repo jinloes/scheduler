@@ -49,6 +49,6 @@ public class JobControllerImpl implements JobController<JobImpl> {
     }
 
     private String getJobLink(String jobId) {
-        return String.format(JOB_LINK, jobId);
+        return String.format(JOB_LINK, ApplicationInitializer.APPLICATION_ROOT_PATH, jobId);
     }
 }
