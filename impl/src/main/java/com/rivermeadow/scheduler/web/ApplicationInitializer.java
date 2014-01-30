@@ -40,7 +40,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 @ComponentScan(basePackages = {"com.rivermeadow.scheduler"})
 public class ApplicationInitializer extends SpringBootServletInitializer {
     private static final String SCHEDULER_NAMESPACE = "scheduler";
-    private static final String APPLICATION_ROOT_PATH = "/api/v1/*";
+    public static final String APPLICATION_ROOT_PATH = "/api/v1";
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(ApplicationInitializer.class, args);
@@ -54,7 +54,7 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
     @Bean
     public ServletRegistrationBean dispatcherRegistration(DispatcherServlet dispatcherServlet) {
         ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet);
-        registration.addUrlMappings(APPLICATION_ROOT_PATH);
+        registration.addUrlMappings(APPLICATION_ROOT_PATH + "/*");
         return registration;
     }
 

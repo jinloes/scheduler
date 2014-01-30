@@ -1,6 +1,7 @@
 package com.rivermeadow.scheduler.web;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.jayway.jsonpath.JsonPath;
 import com.rivermeadow.api.model.Job;
@@ -37,7 +38,8 @@ import static org.hamcrest.Matchers.*;
 public class JobControllerTest {
     private static final String UUID_REGEX =
             "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
-    private static final String JOBS_REGEX = "/jobs/" + UUID_REGEX;
+    private static final Pattern UUID_PATTERN = Pattern.compile("^" + UUID_REGEX);
+    private static final Pattern JOBS_PATTERN = Pattern.compile("/api/v1/jobs/" + UUID_REGEX);
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;
@@ -57,12 +59,12 @@ public class JobControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id",
-                        CthulMatchers.matchesPattern((UUID_REGEX))))
+                        CthulMatchers.matchesPattern((UUID_PATTERN))))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.link",
-                        CthulMatchers.matchesPattern(JOBS_REGEX)))
+                        CthulMatchers.matchesPattern(JOBS_PATTERN)))
                 .andReturn();
         String id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-        String jobsPath = String.format(JobController.JOB_LINK, id);
+        String jobsPath = String.format(JobController.JOB_LINK, "", id);
         mockMvc.perform(MockMvcRequestBuilders.get(jobsPath))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
