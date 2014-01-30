@@ -53,14 +53,15 @@ Queue a job to be run at the scheduled date::
         "link": "/api/v1/jobs/<uuid>"
     }
 
-Request Params::
+Request Params
     =================== ======== ==================================================================
     Param Path          Required Notes
     =================== ======== ==================================================================
     schedule            Yes      ISO8601 datetime string or value 'now' that tells the scheduler
                                  when the job should be run.
     =================== ======== ==================================================================
-    task                Yes      Task object that contains information about the job being executed.
+    task                Yes      Task object that contains information about the job being
+                                 executed.
     =================== ======== ==================================================================
     task.method         Yes      Request method to perform. ie. GET, PUT, POST, DELETE
     =================== ======== ==================================================================
