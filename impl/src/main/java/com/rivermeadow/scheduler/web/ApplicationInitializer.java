@@ -66,12 +66,14 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
     }
     @Bean
     @Autowired
-    public CuratorFramework getCurator(@Qualifier("connectString") final String connectString) {
-        //TODO(jinloes) make retry time configurable
+    public CuratorFramework getCurator(@Qualifier("connectString") final String connectString,
+            @Value("#{systemProperties['zookeeper.wait_time_ms']?: 100}") final long waitTime,
+            @Value("#{systemProperties['zookeeper.sleep_between_retries_ms']?: 5}") final long
+                    sleepBetweenRetries) {
         CuratorFramework curator = CuratorFrameworkFactory.builder()
                 .retryPolicy(new RetryUntilElapsed(
-                        (int) TimeUnit.SECONDS.toMillis(5),
-                        (int) TimeUnit.SECONDS.toSeconds(1)))
+                        (int) TimeUnit.SECONDS.toMillis(waitTime),
+                        (int) TimeUnit.SECONDS.toMillis(sleepBetweenRetries)))
                 .connectString(connectString)
                 .namespace(SCHEDULER_NAMESPACE)
                 .build();

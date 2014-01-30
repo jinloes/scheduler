@@ -16,6 +16,7 @@ import org.hibernate.validator.constraints.URL;
  * {@link Task} implementation.
  */
 public class TaskImpl implements Task {
+    private static final long serialVersionUID = -8683851579840355977L;
     private static final Pattern RANGE_SEPARATOR = Pattern.compile("\\-");
     private final String uri;
     private final String method;
