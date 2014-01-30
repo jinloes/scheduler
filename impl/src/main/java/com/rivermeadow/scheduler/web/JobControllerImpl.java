@@ -5,7 +5,6 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import com.google.common.collect.ImmutableMap;
-import com.rivermeadow.api.dao.JobDAO;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.service.JobService;
 import com.rivermeadow.api.web.JobController;

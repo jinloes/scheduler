@@ -5,7 +5,7 @@ Scheduler
 :Date: 2014-1-29
 :Author: Jonathan Inloes
 :Version: 0.1
-:Updated: 2014-01-29
+:Updated: 2014-01-30
 
 Use Case
 --------
@@ -40,12 +40,11 @@ Queue a job to be run at the scheduled date::
             "method": "POST",
             "uri": "http://www.myserver.com",
             "body": {
-                "user": "marco",
-                "foo": "bar"
+                ...
             },
             "expected_range": "200-300"
         },
-        "schedule": "2014-01-24T12:28:27-08:00" #ISO8601 datetime or value 'now'
+        "schedule": "2014-01-24T12:28:27-08:00"
     }
 
     Response:
@@ -54,6 +53,24 @@ Queue a job to be run at the scheduled date::
         "link": "/api/v1/jobs/<uuid>"
     }
 
+Request Params::
+    =================== ======== ==================================================================
+    Param Path          Required Notes
+    =================== ======== ==================================================================
+    schedule            Yes      ISO8601 datetime string or value 'now' that tells the scheduler
+                                 when the job should be run.
+    =================== ======== ==================================================================
+    task                Yes      Task object that contains information about the job being executed.
+    =================== ======== ==================================================================
+    task.method         Yes      Request method to perform. ie. GET, PUT, POST, DELETE
+    =================== ======== ==================================================================
+    task.uri            Yes      Uri execute request upon. The scheme is required. Currently,
+                                 only the http scheme is supported.
+    =================== ======== ==================================================================
+    task.body           Yes      Request body to send.
+    =================== ======== ==================================================================
+    task.expected_range Yes      Expected request response code range. The bounds are inclusive.
+    =================== ======== ==================================================================
 Retrieve a job::
 
     GET /api/v1/jobs/{jobId}
@@ -65,8 +82,7 @@ Retrieve a job::
             "method": "POST",
             "uri": "http://www.myserver.com",
             "body": {
-                "user": "marco",
-                "foo": "bar"
+                ...
             },
             "expected_range": "200-300"
         },

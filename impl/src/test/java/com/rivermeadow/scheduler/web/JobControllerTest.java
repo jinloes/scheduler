@@ -1,8 +1,7 @@
 package com.rivermeadow.scheduler.web;
 
-import java.util.Map;
-import java.util.regex.Pattern;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import com.jayway.jsonpath.JsonPath;
 import com.rivermeadow.api.model.Job;
