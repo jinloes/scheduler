@@ -59,17 +59,12 @@ Request Params
     =================== ======== ==================================================================
     schedule            Yes      ISO8601 datetime string or value 'now' that tells the scheduler
                                  when the job should be run.
-    =================== ======== ==================================================================
     task                Yes      Task object that contains information about the job being
                                  executed.
-    =================== ======== ==================================================================
     task.method         Yes      Request method to perform. ie. GET, PUT, POST, DELETE
-    =================== ======== ==================================================================
     task.uri            Yes      Uri execute request upon. The scheme is required. Currently,
                                  only the http scheme is supported.
-    =================== ======== ==================================================================
     task.body           Yes      Request body to send.
-    =================== ======== ==================================================================
     task.expected_range Yes      Expected request response code range. The bounds are inclusive.
     =================== ======== ==================================================================
 Retrieve a job::
