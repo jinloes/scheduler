@@ -66,6 +66,11 @@ Request Params
     task.body           Yes      Request body to send.
     task.expected_range Yes      Expected request response code range. The bounds are inclusive.
     =================== ======== ==================================================================
+
+Response Codes:
+
+    * 201 - Job successfully queued
+    
 **Retrieve a job**::
 
     GET /api/v1/jobs/{jobId}
