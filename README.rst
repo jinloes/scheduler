@@ -27,9 +27,9 @@ ensemble to provide the features previously described. The diagram below shows a
     :alt: scheduler architecture
 
 REST API
-^^^^^^^^^^
+--------
 
-Queue a job to be run at the scheduled date::
+**Queue a job to be run at the scheduled date**::
 
     POST /api/v1/jobs
 
