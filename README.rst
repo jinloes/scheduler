@@ -29,7 +29,6 @@ ensemble to provide the features previously described. The diagram below shows a
 REST API
 ^^^^^^^^^^
 
-//TODO(jinloes) explain the requirements of each field is. required/optional, restrictions, etc
 Queue a job to be run at the scheduled date::
 
     POST /api/v1/jobs
