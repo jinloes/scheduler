@@ -70,7 +70,7 @@ Request Params
 Response Codes:
 
     * 201 - Job successfully queued
-    
+
 **Retrieve a job**::
 
     GET /api/v1/jobs/{jobId}
