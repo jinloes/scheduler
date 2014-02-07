@@ -37,7 +37,6 @@ import static org.hamcrest.Matchers.*;
 public class JobControllerTest extends AbstractTestNGSpringContextTests {
     private static final String UUID_REGEX =
             "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
-    private static final Pattern UUID_PATTERN = Pattern.compile("^" + UUID_REGEX);
     private static final Pattern JOBS_PATTERN = Pattern.compile("/api/v1/jobs/" + UUID_REGEX);
     @Autowired
     private WebApplicationContext wac;
@@ -51,9 +50,15 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
     @DataProvider(name = "dataProvider")
     public Object[][] dataProvider() throws IOException {
         return new Object[][] {
-                { getResource("post_job.json"), HttpMethod.POST, Job.Status.RUNNING },
-                // The first job will be running while the 2nd is queued up
-                { getResource("put_job.json"), HttpMethod.PUT, Job.Status.PENDING }
+                { getResource("post_job.json"), HttpMethod.POST,
+                        new String[] { Job.Status.RUNNING.toString(),
+                                Job.Status.ERROR.toString()} },
+                // The first job will be running while the 2nd is queued up,
+                // or may have already failed
+                { getResource("put_job.json"), HttpMethod.PUT,
+                        new String[] { Job.Status.PENDING.toString(), Job.Status.RUNNING.toString(),
+                                Job.Status.ERROR.toString() }
+                }
         };
     }
     private String getResource(String filename) {
@@ -66,14 +71,13 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
 
     @Test(dataProvider = "dataProvider")
     public void testScheduleJob(String requestBody, HttpMethod httpMethod,
-                                Job.Status jobStatus) throws Exception {
+                                String[] expectedStatus) throws Exception {
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(JobController.ROOT_JOB_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id",
-                        CthulMatchers.matchesPattern((UUID_PATTERN))))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id", CustomMatchers.isUuid()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.link",
                         CthulMatchers.matchesPattern(JOBS_PATTERN)))
                 .andReturn();
@@ -82,9 +86,8 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
         mockMvc.perform(MockMvcRequestBuilders.get(jobsPath))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id", not(isEmptyOrNullString())))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status",
-                        equalTo(jobStatus.toString())))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id", CustomMatchers.isUuid()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status", isOneOf(expectedStatus)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.uri",
                         equalTo("http://www.url.com")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.task.method",
