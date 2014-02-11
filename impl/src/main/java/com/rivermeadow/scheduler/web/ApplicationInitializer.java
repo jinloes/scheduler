@@ -68,8 +68,8 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
     @Autowired
     public CuratorFramework getCurator(@Qualifier("connectString") final String connectString,
             @Value("#{systemProperties['zookeeper.wait_time_ms']?: 100}") final long waitTime,
-            @Value("#{systemProperties['zookeeper.sleep_between_retries_ms']?: 5}") final long
-                    sleepBetweenRetries) {
+            @Value("#{systemProperties['zookeeper.sleep_between_retries_ms']?: 5}")
+            final long sleepBetweenRetries) {
         CuratorFramework curator = CuratorFrameworkFactory.builder()
                 .retryPolicy(new RetryUntilElapsed(
                         (int) TimeUnit.SECONDS.toMillis(waitTime),
@@ -83,8 +83,8 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
 
     @Bean
     @Autowired
-    public DistributedDelayQueue<Job> getJobQueue(final CuratorFramework client, final QueueConsumer<Job> jobConsumer,
-                                             final QueueSerializer<Job> serializer) {
+    public DistributedDelayQueue<Job> getJobQueue(final CuratorFramework client,
+            final QueueConsumer<Job> jobConsumer, final QueueSerializer<Job> serializer) {
         QueueBuilder<Job> builder = QueueBuilder.builder(client, jobConsumer, serializer, "/jobs");
         DistributedDelayQueue<Job> jobQueue = builder.lockPath("/locks").buildDelayQueue();
         try {
@@ -115,7 +115,8 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
     public static class DefaultApplication {
         @Bean
         public String connectString(
-                @Value("#{systemProperties['zookeeper.connect_url']?:'localhost:2181'}") final String connectString) {
+                @Value("#{systemProperties['zookeeper.connect_url']?:'localhost:2181'}")
+                final String connectString) {
             return connectString;
         }
     }
