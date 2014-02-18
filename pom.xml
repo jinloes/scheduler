@@ -16,6 +16,7 @@
 
     <properties>
         <scheduler.version>0.24.0</scheduler.version>
+        <build.number>local</build.number>
     </properties>
 
     <parent>
