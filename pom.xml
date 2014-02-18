@@ -9,14 +9,14 @@
     <packaging>pom</packaging>
     <version>${scheduler.version}</version>
 
-    <properties>
-        <scheduler.version>0.24.0</scheduler.version>
-    </properties>
-
     <modules>
         <module>api</module>
         <module>impl</module>
     </modules>
+
+    <properties>
+        <scheduler.version>0.24.0</scheduler.version>
+    </properties>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
