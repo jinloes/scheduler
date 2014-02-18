@@ -24,6 +24,7 @@
         </dependency>
     </dependencies>
 
+    <!-- build.number comes from teamcity locally it will just be null-->
     <build>
         <finalName>scheduler-${scheduler.version}-${build.number}</finalName>
         <plugins>
