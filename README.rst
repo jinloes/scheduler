@@ -5,7 +5,7 @@ Scheduler
 :Date: 2014-1-29
 :Author: Jonathan Inloes
 :Version: 0.1
-:Updated: 2014-02-11
+:Updated: 2014-02-20
 
 Use Case
 --------
@@ -82,10 +82,10 @@ Request Params
 
 The following request params are supported by the POST /api/v1/jobs endpoint:
 
-================================== ======== ==================================================================
+================================== ======== ===================================================================
 Param Path                         Required Notes
-================================== ======== ==================================================================
-schedule                           Yes      ISO8601 datetime string or value 'now' that tells the scheduler
+================================== ======== ===================================================================
+schedule                           Yes      `ISO 8601`_ datetime string or value 'now' that tells the scheduler
                                             when the job should be run.
 task                               Yes      Task object that contains information about the job being
                                             executed.
@@ -101,9 +101,25 @@ task.response_code_ranges[*].start No       Inclusive expected response code ran
                                             end.
 task.response_code_ranges[*].end   No       Inclusive expected response code range end. If no value is
                                             provided, then maximum integer value will be assumed. If **end**
-                                            is less than **start**, then **end will be assumed to be the
+                                            is less than **start**, then **end** will be assumed to be the
                                             **start**.
-================================== ======== ==================================================================
+================================== ======== ===================================================================
+
+Validation Error Response
+^^^^^^^^^^^^^^^^^^^^^^^^^
+If validation fails on a job post, then the response will be::
+
+    Code: 406
+    {
+        "errors": [
+            {
+                "field": <field name ie. "task.uri">,
+                "message": <error message ie. "Invalid date.">
+            }
+        ]
+    }
+
+where **field name** is the name of the field that contained the error and **message** is the validation error message
 
 Retrieve a job
 ^^^^^^^^^^^^^^
@@ -140,3 +156,4 @@ Common Response Codes
 .. Links:
 
 .. _Zookeeper: http://zookeeper.apache.org/
+.. _ISO 8601: http://en.wikipedia.org/wiki/ISO_8601

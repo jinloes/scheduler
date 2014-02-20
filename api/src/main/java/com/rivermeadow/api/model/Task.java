@@ -37,6 +37,5 @@ public interface Task extends Serializable {
      *
      * @return expected response code ranges
      */
-    //@JsonProperty("response_code_ranges")
     List<ResponseCodeRange> getResponseCodeRanges();
 }
