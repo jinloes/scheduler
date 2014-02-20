@@ -26,8 +26,13 @@ ensemble to provide the features previously described. The diagram below shows a
     :width: 400px
     :alt: scheduler architecture
 
+How to run
+----------
+
+java -jar scheduler.jar -D<**System Property**>=<value>
+
 Configuration
--------------
+^^^^^^^^^^^^^
 
 The following system options can be specified
 
@@ -55,7 +60,12 @@ POST Request::
             "body": {
                 ...
             },
-            "expected_range": "200-300"
+            "response_code_ranges": [
+                {
+                    "start": 200,
+                    "end": 300
+                }
+            ]
         },
         "schedule": "2014-01-24T12:28:27-08:00"
     }
@@ -67,21 +77,33 @@ POST Response::
         "link": "/api/v1/jobs/<uuid>"
     }
 
-**Request Params**
+Request Params
+^^^^^^^^^^^^^^
 
-=================== ======== ==================================================================
-Param Path          Required Notes
-=================== ======== ==================================================================
-schedule            Yes      ISO8601 datetime string or value 'now' that tells the scheduler
-                             when the job should be run.
-task                Yes      Task object that contains information about the job being
-                             executed.
-task.method         Yes      Request method to perform. ie. GET, PUT, POST, DELETE
-task.uri            Yes      Uri execute request upon. The scheme is required. Currently,
-                             only the http scheme is supported.
-task.body           Yes      Request body to send.
-task.expected_range Yes      Expected request response code range. The bounds are inclusive.
-=================== ======== ==================================================================
+The following request params are supported by the POST /api/v1/jobs endpoint:
+
+================================== ======== ==================================================================
+Param Path                         Required Notes
+================================== ======== ==================================================================
+schedule                           Yes      ISO8601 datetime string or value 'now' that tells the scheduler
+                                            when the job should be run.
+task                               Yes      Task object that contains information about the job being
+                                            executed.
+task.method                        Yes      Request method to perform. ie. GET, PUT, POST, DELETE
+task.uri                           Yes      Uri execute request upon. The scheme is required. Currently,
+                                            only the http scheme is supported.
+task.body                          Yes      Request body to send.
+task.response_code_ranges          No       A list of expected response code ranges. If no value is provided,
+                                            then no restriction will be placed on the response code.
+task.response_code_ranges[*].start No       Inclusive expected response code range start. If no value is
+                                            provided, then minimum integer value will be assumed. If **start**
+                                            is greater than **end**, then **start* will be assumed to be the
+                                            end.
+task.response_code_ranges[*].end   No       Inclusive expected response code range end. If no value is
+                                            provided, then maximum integer value will be assumed. If **end**
+                                            is less than **start**, then **end will be assumed to be the
+                                            **start**.
+================================== ======== ==================================================================
 
 Retrieve a job
 ^^^^^^^^^^^^^^
@@ -100,7 +122,12 @@ GET Response::
             "body": {
                 #Job request body
             },
-            "expected_range": "200-300"
+            "response_code_ranges": [
+                {
+                    "start": 200,
+                    "end": 300
+                }
+            ]
         },
         "schedule": "2014-01-24T12:28:27-08:00"
     }
@@ -108,6 +135,7 @@ GET Response::
 Common Response Codes
 ^^^^^^^^^^^^^^^^^^^^^
     * 201 - Job successfully queued
+    * 406 - Request body validation failed, check the *errors* field for messages
 
 .. Links:
 

@@ -1,38 +1,33 @@
 package com.rivermeadow.scheduler.model;
 
+import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.rivermeadow.api.model.ResponseCodeRange;
 import com.rivermeadow.api.model.Task;
-import com.rivermeadow.api.validation.Uri;
-
-import org.apache.commons.lang3.Range;
-import org.hibernate.validator.constraints.URL;
 
 /**
  * {@link Task} implementation.
  */
 public class TaskImpl implements Task {
     private static final long serialVersionUID = -8683851579840355977L;
-    private static final Pattern RANGE_SEPARATOR = Pattern.compile("\\-");
     private final String uri;
     private final String method;
     private final Map<String, Object> body;
-    private final Range<Integer> expectedRange;
+    private final List<ResponseCodeRange> expectedRanges;
 
     @JsonCreator
-    public TaskImpl(@JsonProperty("uri") final String uri, @JsonProperty("method") final String method,
-                    @JsonProperty("body") final Map<String, Object> body,
-                    @JsonProperty("expected_range") final String expectedRange) {
+    public TaskImpl(@JsonProperty("uri") final String uri,
+            @JsonProperty("method") final String method,
+            @JsonProperty("body") final Map<String, Object> body,
+            @JsonProperty("response_code_ranges") final List<ResponseCodeRange> expectedRanges) {
         this.uri = uri;
         this.method = method;
         this.body = body;
-        //TODO(jinloes) validate range
-        String[] range = RANGE_SEPARATOR.split(expectedRange);
-        this.expectedRange = Range.between(Integer.parseInt(range[0]), Integer.parseInt(range[1]));
+        this.expectedRanges = expectedRanges;
     }
 
     @Override
@@ -51,8 +46,9 @@ public class TaskImpl implements Task {
     }
 
     @Override
-    public Range<Integer> getExpectedRange() {
-        return expectedRange;
+    @JsonProperty("response_code_ranges")
+    public List<ResponseCodeRange> getResponseCodeRanges() {
+        return expectedRanges;
     }
 
     @Override
@@ -61,7 +57,7 @@ public class TaskImpl implements Task {
                 .add("uri", uri)
                 .add("method", method)
                 .add("body", body)
-                .add("expectedRange", expectedRange)
+                .add("expectedRanges", expectedRanges)
                 .toString();
     }
 }

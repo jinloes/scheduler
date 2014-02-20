@@ -24,11 +24,14 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.embedded.ServletRegistrationBean;
 import org.springframework.boot.web.SpringBootServletInitializer;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.DispatcherServlet;
 
@@ -64,6 +67,7 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
                 .registerModule(new JodaModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
+
     @Bean
     @Autowired
     public CuratorFramework getCurator(@Qualifier("connectString") final String connectString,
@@ -100,11 +104,19 @@ public class ApplicationInitializer extends SpringBootServletInitializer {
         return new RestTemplate();
     }
 
+    @Bean(name="messageSource")
+    public MessageSource getMessageSource() {
+        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+        source.setBasename("messages");
+        source.setUseCodeAsDefaultMessage(true);
+        return source;
+    }
+
     @Configuration
     @Profile("test")
     public static class TestApplication {
         @Bean
-        public String connectString() throws Exception{
+        public String connectString() throws Exception {
             TestingServer testingServer = new TestingServer(InstanceSpec.newInstanceSpec());
             return testingServer.getConnectString();
         }

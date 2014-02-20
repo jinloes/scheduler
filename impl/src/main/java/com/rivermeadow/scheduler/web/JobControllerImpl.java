@@ -33,7 +33,8 @@ public class JobControllerImpl implements JobController<JobImpl> {
     }
 
     @Override
-    @RequestMapping(value = "/{jobId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/{jobId}", method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody Job getJob(@PathVariable("jobId") final String jobId) {
         return jobService.getJob(jobId);
     }
@@ -43,7 +44,8 @@ public class JobControllerImpl implements JobController<JobImpl> {
     public ResponseEntity scheduleJob(@RequestBody @Valid final JobImpl job) {
         jobService.queueJob(job);
         String jobId = job.getId().toString();
-        Map<String, Object> response = ImmutableMap.<String, Object>of("id", jobId, "link", getJobLink(jobId));
+        Map<String, Object> response = ImmutableMap.<String, Object>of("id", jobId,
+                "link", getJobLink(jobId));
         return new ResponseEntity(response, HttpStatus.CREATED);
     }
 

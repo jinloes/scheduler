@@ -1,13 +1,16 @@
 package com.rivermeadow.scheduler.util;
 
+import java.util.List;
 import java.util.Map;
 
 import com.rivermeadow.api.dao.JobDAO;
 import com.rivermeadow.api.model.Job;
+import com.rivermeadow.api.model.ResponseCodeRange;
 import com.rivermeadow.api.util.AbstractJobExecutor;
 import com.rivermeadow.api.util.JobExecutor;
 import com.rivermeadow.api.util.JobListener;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -38,21 +41,30 @@ public class HttpJobExecutor extends AbstractJobExecutor {
         ResponseEntity<Map> response = restTemplate.exchange(job.getTask().getUri(),
                 method, new HttpEntity<>(job.getTask().getBody()), Map.class);
         int statusCode = response.getStatusCode().value();
-        checkExpectedRange(job.getTask().getExpectedRange(), statusCode);
+        checkExpectedRange(job.getTask().getResponseCodeRanges(), statusCode);
     }
 
-    private void checkExpectedRange(Range<Integer> expectedRange, int statusCode) {
-        if(!expectedRange.contains(statusCode)) {
-            //TODO(jinloes) use messages.properties
-            throw new RuntimeException(String.format("Response code: %s was not in expected range. ",
-                    statusCode, expectedRange.toString()));
+    private void checkExpectedRange(List<ResponseCodeRange> expectedResponseCodes, int statusCode) {
+        if (CollectionUtils.isNotEmpty(expectedResponseCodes)) {
+            for (ResponseCodeRange range : expectedResponseCodes) {
+                if (range.contains(statusCode)) {
+                    // The response code was in one of the ranges, so return
+                    return;
+                }
+            }
+        } else {
+            // The list was empty so accept any value.
+            return;
         }
+        //TODO(jinloes) use messages.properties
+        throw new RuntimeException(String.format("Response code: %s was not in expected range. ",
+                statusCode, expectedResponseCodes.toString()));
     }
 
     /**
      * A listener for executing an http job.
      */
-    private static class HttpJobListener implements JobListener {
+    private static class HttpJobListener extends DefaultJobListener {
         private JobDAO jobDAO;
 
         public HttpJobListener(final JobDAO jobDAO) {
@@ -60,22 +72,12 @@ public class HttpJobExecutor extends AbstractJobExecutor {
         }
 
         @Override
-        public void beforeJobExecution(Job job) {
-            // Do nothing
-        }
-
-        @Override
-        public void onJobSuccess(Job job) {
-            // Do nothing
-        }
-
-        @Override
         public void onJobFailure(Exception e, Job job) {
-            if(e instanceof RestClientException) {
+            if (e instanceof RestClientException) {
                 // Return gracefully because we don't want a job with an http error to be requeued
                 job.setStatus(Job.Status.ERROR);
                 jobDAO.updateJob(job);
-            } else if(e instanceof RuntimeException) {
+            } else if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
             } else {
                 // Wrap the exception

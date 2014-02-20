@@ -16,10 +16,7 @@ import javax.validation.Constraint;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Schedule {
-    //TODO(jinloes) use ValidationMessage.properties file
-    public abstract String message() default "Invalid date. Must be ISO8601 format or value 'now'.";
-
-    public abstract Class[] groups() default {};
-
-    public abstract Class[] payload() default {};
+    String message() default "Invalid date. Must be ISO8601 format or value 'now'.";
+    Class[] groups() default {};
+    Class[] payload() default {};
 }

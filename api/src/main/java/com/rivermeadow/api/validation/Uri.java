@@ -5,6 +5,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Set;
 
 import javax.validation.Constraint;
 
@@ -16,10 +17,15 @@ import javax.validation.Constraint;
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Uri {
-    //TODO(jinloes) use ValidationMessage.properties file
-    public abstract String message() default "Invalid uri scheme. Supported schemes are http.";
+    String message() default "Invalid uri scheme. Supported schemes are http.";
+    Class[] groups() default {};
+    Class[] payload() default {};
 
-    public abstract Class[] groups() default {};
+    /**
+     * Schemes supported by the validator.
+     *
+     * @return supported schemes
+     */
+    String[] supportedSchemes() default {"http"};
 
-    public abstract Class[] payload() default {};
 }

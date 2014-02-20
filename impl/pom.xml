@@ -22,10 +22,23 @@
             <artifactId>api</artifactId>
             <version>${scheduler.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <version>1.0.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+        </dependency>
+
     </dependencies>
 
-    <!-- build.number comes from teamcity locally it will just be null-->
     <build>
+        <!-- build.number comes from teamcity, locally it will just be null-->
         <finalName>scheduler-${scheduler.version}-${build.number}</finalName>
         <plugins>
             <plugin>

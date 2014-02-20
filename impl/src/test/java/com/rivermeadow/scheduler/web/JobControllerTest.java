@@ -1,8 +1,13 @@
 package com.rivermeadow.scheduler.web;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.json.Json;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.jayway.jsonpath.JsonPath;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.web.JobController;
@@ -19,7 +24,6 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.testng.annotations.BeforeClass;
@@ -27,6 +31,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Tests for {@link com.rivermeadow.api.web.JobController}.
@@ -49,19 +54,23 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
 
     @DataProvider(name = "dataProvider")
     public Object[][] dataProvider() throws IOException {
-        return new Object[][] {
-                { getResource("post_job.json"), HttpMethod.POST,
-                        new String[] { Job.Status.RUNNING.toString(),
-                                Job.Status.ERROR.toString()} },
+        return new Object[][]{
+                {
+                        getRequest("post_job.json"), HttpMethod.POST,
+                        Lists.newArrayList(Job.Status.RUNNING.toString(),
+                                Job.Status.ERROR.toString())
+                },
                 // The first job will be running while the 2nd is queued up,
                 // or may have already failed
-                { getResource("put_job.json"), HttpMethod.PUT,
-                        new String[] { Job.Status.PENDING.toString(), Job.Status.RUNNING.toString(),
-                                Job.Status.ERROR.toString() }
+                {
+                        getRequest("put_job.json"), HttpMethod.PUT,
+                        Lists.newArrayList(Job.Status.PENDING.toString(),
+                                Job.Status.RUNNING.toString(), Job.Status.ERROR.toString())
                 }
         };
     }
-    private String getResource(String filename) {
+
+    private String getRequest(String filename) {
         try {
             return IOUtils.toString(getClass().getClassLoader().getResourceAsStream(filename));
         } catch (IOException e) {
@@ -71,30 +80,53 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
 
     @Test(dataProvider = "dataProvider")
     public void testScheduleJob(String requestBody, HttpMethod httpMethod,
-                                String[] expectedStatus) throws Exception {
+            List<String> expectedStatus) throws Exception {
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(JobController.ROOT_JOB_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id", CustomMatchers.isUuid()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.link",
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", CustomMatchers.isUuid()))
+                .andExpect(jsonPath("$.link",
                         CthulMatchers.matchesPattern(JOBS_PATTERN)))
                 .andReturn();
         String id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
         String jobsPath = String.format(JobController.JOB_LINK, "", id);
         mockMvc.perform(MockMvcRequestBuilders.get(jobsPath))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id", CustomMatchers.isUuid()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.status", isOneOf(expectedStatus)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.uri",
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", CustomMatchers.isUuid()))
+                .andExpect(jsonPath("$.status", isOneOf(expectedStatus.toArray())))
+                .andExpect(jsonPath("$.task.uri",
                         equalTo("http://www.url.com")))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.method",
+                .andExpect(jsonPath("$.task.method",
                         equalTo(httpMethod.toString())))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.expected_range",
-                        equalTo("200-300")))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.body.user", equalTo("marco")))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.task.body.foo", equalTo("bar")));
+                .andExpect(jsonPath("$.task.response_code_ranges[0].start", equalTo(200)))
+                .andExpect(jsonPath("$.task.response_code_ranges[0].end", equalTo(300)))
+                .andExpect(jsonPath("$.task.body.user", equalTo("marco")))
+                .andExpect(jsonPath("$.task.body.foo", equalTo("bar")));
+    }
+
+    @Test
+    public void testScheduleJobValidationFailure() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post(JobController.ROOT_JOB_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(Json.createObjectBuilder()
+                        .add("schedule", "bad date")
+                        .add("task", Json.createObjectBuilder()
+                                .add("uri", "www.google.com")
+                                .add("response_code_ranges", Json.createArrayBuilder()
+                                        .add(Json.createObjectBuilder()
+                                                .add("start", 200)
+                                                .add("end", 300)
+                                                .build()))
+                                .build())
+                        .build().toString()))
+                .andExpect(status().isNotAcceptable())
+                .andExpect(jsonPath("$.errors", hasItems(
+                        CustomMatchers.isErrorField(ImmutableMap.of("field", "task.uri", "message",
+                                "Invalid uri scheme. Supported")),
+                        CustomMatchers.isErrorField(ImmutableMap.of("field", "schedule", "message",
+                                "Invalid schedule date")))));
     }
 }

@@ -1,14 +1,10 @@
 package com.rivermeadow.api.model;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.rivermeadow.api.util.RangeSerializer;
 import com.rivermeadow.api.validation.Uri;
-
-import org.apache.commons.lang3.Range;
 
 /**
  * A task that a {@link Job} will execute.
@@ -37,11 +33,10 @@ public interface Task extends Serializable {
     Map<String, Object> getBody();
 
     /**
-     * Return the expected response code range;
+     * Return the expected response code ranges;
      *
-     * @return expected response code range
+     * @return expected response code ranges
      */
-    @JsonProperty("expected_range")
-    @JsonSerialize(using = RangeSerializer.class)
-    Range<Integer> getExpectedRange();
+    //@JsonProperty("response_code_ranges")
+    List<ResponseCodeRange> getResponseCodeRanges();
 }
