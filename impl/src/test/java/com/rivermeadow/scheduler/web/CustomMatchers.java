@@ -84,15 +84,15 @@ public class CustomMatchers {
         public boolean matches(Object item) {
             try {
                 assertThat(item, instanceOf(Map.class));
-                assertThat((Map<String, String>)item, hasEntry(equalTo(FIELD_KEY),
+                Map<String, String> map = (Map<String, String>) item;
+                assertThat(map, hasEntry(equalTo(FIELD_KEY),
                         equalTo(expectedErrorField.get(FIELD_KEY))));
-                assertThat((Map<String, String>)item, hasEntry(equalTo(MESSAGE_KEY),
+                assertThat(map, hasEntry(equalTo(MESSAGE_KEY),
                         containsString(expectedErrorField.get(MESSAGE_KEY))));
                 return true;
             } catch (Throwable t) {
-                // Do nothing, continue and fail the matcher
+                return false;
             }
-            return false;
         }
 
         @Override
