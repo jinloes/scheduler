@@ -2,16 +2,19 @@ package com.rivermeadow.scheduler.web;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.rivermeadow.api.validation.UriValidator;
+import com.rivermeadow.api.exception.MessageArgumentException;
+import com.rivermeadow.api.exception.ResponseStatusException;
+import com.rivermeadow.api.model.ErrorMessageDTO;
+import com.rivermeadow.api.model.FieldErrorDTO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  */
 @ControllerAdvice
 public class SchedulerExceptionHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerExceptionHandler.class);
     private final MessageSource messageSource;
 
     @Autowired
@@ -34,21 +38,53 @@ public class SchedulerExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public @ResponseBody ResponseEntity handleValidationFailure(MethodArgumentNotValidException e) {
-        List<Map<String, String>> errors = Lists.newArrayList();
-        for(FieldError fieldError: e.getBindingResult().getFieldErrors()) {
+        LOGGER.error("Validation failed", e);
+        List<FieldErrorDTO> errors = Lists.newArrayList();
+        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
             String errorMessage = resolveLocalizedErrorMessage(fieldError);
-            errors.add(ImmutableMap.of("field", fieldError.getField(), "message", errorMessage));
+            errors.add(FieldErrorDTO.builder()
+                    .withField(fieldError.getField())
+                    .withMessage(errorMessage)
+                    .build());
         }
         return new ResponseEntity<>(ImmutableMap.of("errors", errors), HttpStatus.NOT_ACCEPTABLE);
     }
 
+    @ExceptionHandler(MessageArgumentException.class)
+    public @ResponseBody ResponseEntity handleMessageArgumentException(MessageArgumentException e) {
+        String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), e.getArgs());
+        LOGGER.error(errorMessage, e);
+        return new ResponseEntity<>(ErrorMessageDTO.builder()
+                .withMessage(errorMessage)
+                .build(), e.getHttpStatus());
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public @ResponseBody ResponseEntity<ErrorMessageDTO> handleResponseStatusException(
+            ResponseStatusException e) {
+        String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), null);
+        LOGGER.error(errorMessage, e);
+        return new ResponseEntity<>(ErrorMessageDTO.builder()
+                .withMessage(errorMessage)
+                .build(), e.getHttpStatus());
+    }
+
+    @ExceptionHandler(Throwable.class)
+    public @ResponseBody ResponseEntity<ErrorMessageDTO> handleThrowable(Throwable e) {
+        String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), null);
+        LOGGER.error(errorMessage, e);
+        return new ResponseEntity<>(ErrorMessageDTO.builder()
+                .withMessage(errorMessage)
+                .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     private String resolveLocalizedErrorMessage(FieldError fieldError) {
-        Locale currentLocale =  LocaleContextHolder.getLocale();
+        Locale currentLocale = LocaleContextHolder.getLocale();
         return messageSource.getMessage(fieldError, currentLocale);
     }
 
-    @ExceptionHandler(DataRetrievalFailureException.class)
-    public @ResponseBody ResponseEntity handleDataRetrievalFailure(DataRetrievalFailureException e) {
-        return new ResponseEntity<>("The requested resource could not be found.", HttpStatus.NOT_FOUND);
+    private String resolveLocalizedErrorMessage(String code, Object[] args) {
+        Locale currentLocale = LocaleContextHolder.getLocale();
+        return messageSource.getMessage(code, args, currentLocale);
     }
 }

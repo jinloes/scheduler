@@ -13,7 +13,7 @@ public interface JobDAO {
      *
      * @param id id
      */
-    void checkExists(String id);
+    void checkExists(String id) throws Exception;
 
     /**
      * Schedules a job to be run.
@@ -36,7 +36,7 @@ public interface JobDAO {
      *
      * @return job
      */
-    Job getJob(String id);
+    Job getJob(String id) throws Exception;
 
     /**
      * Updates the job. Old job data will be overwritten.

@@ -148,10 +148,20 @@ GET Response::
         "schedule": "2014-01-24T12:28:27-08:00"
     }
 
+Error Messages
+^^^^^^^^^^^^^^
+
+Error messages outside of validation will be returned in the following format::
+
+    {
+        "message": <error message>
+    }
+
 Common Response Codes
 ^^^^^^^^^^^^^^^^^^^^^
     * 201 - Job successfully queued
-    * 406 - Request body validation failed, check the *errors* field for messages
+    * 406 - Request body validation failed, check the **errors** field for field/error message pair
+    * 500 - Unexpected error has occurred, check the **message** field for error message
 
 .. Links:
 
