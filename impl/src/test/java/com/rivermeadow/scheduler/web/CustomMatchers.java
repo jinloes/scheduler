@@ -82,23 +82,22 @@ public class CustomMatchers {
 
         @Override
         public boolean matches(Object item) {
-            if (item instanceof Map) {
-                Map<String, String> map = (Map<String, String>) item;
-                try {
-                    assertThat(map.get(FIELD_KEY), equalTo(expectedErrorField.get(FIELD_KEY)));
-                    assertThat(map.get(MESSAGE_KEY),
-                            containsString(expectedErrorField.get(MESSAGE_KEY)));
-                    return true;
-                } catch (Throwable t) {
-                    // Do nothing, continue and fail the matcher
-                }
+            try {
+                assertThat(item, instanceOf(Map.class));
+                assertThat((Map<String, String>)item, hasEntry(equalTo(FIELD_KEY),
+                        equalTo(expectedErrorField.get(FIELD_KEY))));
+                assertThat((Map<String, String>)item, hasEntry(equalTo(MESSAGE_KEY),
+                        containsString(expectedErrorField.get(MESSAGE_KEY))));
+                return true;
+            } catch (Throwable t) {
+                // Do nothing, continue and fail the matcher
             }
             return false;
         }
 
         @Override
         public void describeTo(Description description) {
-            description.appendText("valid error field");
+            description.appendText(expectedErrorField.toString());
         }
     }
 }
