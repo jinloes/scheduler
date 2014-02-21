@@ -3,10 +3,7 @@ package com.rivermeadow.api.model;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Objects;
-import com.rivermeadow.api.util.RangeSerializer;
 
 import org.apache.commons.lang3.Range;
 

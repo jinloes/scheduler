@@ -34,7 +34,7 @@ public class ZookeeperJobDAO implements JobDAO {
     @Override
     public void checkExists(String id) throws Exception {
         String jobPath = getJobArchivePath(id);
-        if(curatorFramework.checkExists().forPath(jobPath) == null) {
+        if (curatorFramework.checkExists().forPath(jobPath) == null) {
             throw new NotFoundException(ErrorCodes.JOB_NOT_FOUND, id);
         }
     }
