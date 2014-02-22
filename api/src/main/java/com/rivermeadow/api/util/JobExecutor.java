@@ -6,5 +6,10 @@ import com.rivermeadow.api.model.Job;
  * Interface for executing jobs.
  */
 public interface JobExecutor {
-    public void execute(Job job);
+    /**
+     * Executes a job.
+     *
+     * @param job job
+     */
+    void execute(Job job);
 }

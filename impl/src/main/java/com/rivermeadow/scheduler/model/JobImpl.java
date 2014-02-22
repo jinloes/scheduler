@@ -2,17 +2,17 @@ package com.rivermeadow.scheduler.model;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import java.util.UUID;
-
-import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.model.Task;
 import com.rivermeadow.api.validation.Schedule;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.joda.time.DateTime;
 import org.joda.time.format.ISODateTimeFormat;
 
@@ -30,8 +30,8 @@ public class JobImpl implements Job {
     private Status status;
 
     @JsonCreator
-    private JobImpl(@JsonProperty("task") final TaskImpl task,
-                    @JsonProperty("schedule") final String schedule) {
+    public JobImpl(@JsonProperty("task") final TaskImpl task,
+            @JsonProperty("schedule") final String schedule) {
         this.id = UUID.randomUUID();
         this.task = task;
         this.schedule = schedule;
@@ -45,11 +45,11 @@ public class JobImpl implements Job {
 
     @Override
     public DateTime getSchedule() {
-        if(scheduleDate != null) {
+        if (scheduleDate != null) {
             return scheduleDate;
         }
         // Lazily initialize the schedule date
-        if(NOW.equals(schedule)) {
+        if (NOW.equals(schedule)) {
             scheduleDate = new DateTime();
         } else {
             scheduleDate = ISODateTimeFormat.dateOptionalTimeParser().parseDateTime(schedule);
@@ -82,9 +82,29 @@ public class JobImpl implements Job {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("task", task)
-                .add("schedule", schedule)
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("task", task)
+                .append("schedule", schedule)
+                .append("status", status)
                 .toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(task, schedule, status);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        final JobImpl other = (JobImpl) obj;
+        return Objects.equals(this.task, other.task) &&
+                Objects.equals(this.schedule, other.schedule) &&
+                Objects.equals(this.status, other.status);
     }
 }

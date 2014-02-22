@@ -8,7 +8,8 @@ public enum ErrorCodes {
     JOB_GET_FAILED("Job.get.failed"),
     JOB_QUEUE_FAILED("Job.queue.failed"),
     JOB_SAVE_FAILED("Job.save.failed"),
-    JOB_UPDATE_FAILED("Job.update.failed");
+    JOB_UPDATE_FAILED("Job.update.failed"),
+    JOB_RESPONSE_CODE_UNEXPECTED("Job.response_code.unexpected");
 
     private final String errorCode;
 

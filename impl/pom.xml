@@ -17,10 +17,18 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>com.rivermeadow</groupId>
             <artifactId>api</artifactId>
             <version>${scheduler.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.googlecode.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>1.5</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -33,6 +41,7 @@
         <dependency>
             <groupId>commons-collections</groupId>
             <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
         </dependency>
 
     </dependencies>

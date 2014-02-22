@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.rivermeadow.api.dao.JobDAO;
+import com.rivermeadow.api.exception.MessageArgumentException;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.model.ResponseCodeRange;
 import com.rivermeadow.api.util.AbstractJobExecutor;
+import com.rivermeadow.api.util.ErrorCodes;
 import com.rivermeadow.api.util.JobExecutor;
-import com.rivermeadow.api.util.JobListener;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -56,9 +56,8 @@ public class HttpJobExecutor extends AbstractJobExecutor {
             // The list was empty so accept any value.
             return;
         }
-        //TODO(jinloes) use messages.properties
-        throw new RuntimeException(String.format("Response code: %s was not in expected range. ",
-                statusCode, expectedResponseCodes.toString()));
+        throw new MessageArgumentException(ErrorCodes.JOB_RESPONSE_CODE_UNEXPECTED, statusCode,
+                expectedResponseCodes.toString());
     }
 
     /**

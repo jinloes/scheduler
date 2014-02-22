@@ -1,11 +1,12 @@
 package com.rivermeadow.api.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 
 import org.apache.commons.lang3.Range;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Models a response code range. A response code range is used to verify a response code from
@@ -36,8 +37,25 @@ public class ResponseCodeRange implements Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("range", range)
+        return new ToStringBuilder(this)
+                .append("range", range)
                 .toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(range);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        final ResponseCodeRange other = (ResponseCodeRange) obj;
+        return Objects.equals(this.range, other.range);
     }
 }

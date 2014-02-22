@@ -2,12 +2,15 @@ package com.rivermeadow.scheduler.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
 import com.rivermeadow.api.model.ResponseCodeRange;
 import com.rivermeadow.api.model.Task;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * {@link Task} implementation.
@@ -53,11 +56,31 @@ public class TaskImpl implements Task {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("uri", uri)
-                .add("method", method)
-                .add("body", body)
-                .add("expectedRanges", expectedRanges)
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("uri", uri)
+                .append("method", method)
+                .append("body", body)
+                .append("expectedRanges", expectedRanges)
                 .toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uri, method, body, expectedRanges);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        final TaskImpl other = (TaskImpl) obj;
+        return Objects.equals(this.uri, other.uri) &&
+                Objects.equals(this.method, other.method) &&
+                Objects.equals(this.body, other.body) &&
+                Objects.equals(this.expectedRanges, other.expectedRanges);
     }
 }
