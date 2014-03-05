@@ -37,9 +37,7 @@ public class SchedulerExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public
-    @ResponseBody
-    ResponseEntity handleValidationFailure(MethodArgumentNotValidException e) {
+    public @ResponseBody ResponseEntity handleValidationFailure(MethodArgumentNotValidException e) {
         LOGGER.error("Validation failed", e);
         List<FieldErrorDTO> errors = Lists.newArrayList();
         for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
@@ -53,18 +51,14 @@ public class SchedulerExceptionHandler {
     }
 
     @ExceptionHandler(MessageArgumentException.class)
-    public
-    @ResponseBody
-    ResponseEntity handleMessageArgumentException(MessageArgumentException e) {
+    public @ResponseBody ResponseEntity handleMessageArgumentException(MessageArgumentException e) {
         String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), e.getArgs());
         LOGGER.error(errorMessage, e);
         return new ResponseEntity<>(new ErrorMessageDTO(errorMessage), e.getHttpStatus());
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public
-    @ResponseBody
-    ResponseEntity<ErrorMessageDTO> handleResponseStatusException(
+    public @ResponseBody ResponseEntity<ErrorMessageDTO> handleResponseStatusException(
             ResponseStatusException e) {
         String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), null);
         LOGGER.error(errorMessage, e);
@@ -72,9 +66,7 @@ public class SchedulerExceptionHandler {
     }
 
     @ExceptionHandler(Throwable.class)
-    public
-    @ResponseBody
-    ResponseEntity<ErrorMessageDTO> handleThrowable(Throwable e) {
+    public @ResponseBody ResponseEntity<ErrorMessageDTO> handleThrowable(Throwable e) {
         String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), null);
         LOGGER.error(errorMessage, e);
         return new ResponseEntity<>(new ErrorMessageDTO(errorMessage),
