@@ -6,7 +6,7 @@ package com.rivermeadow.api.model;
 public final class ErrorMessageDTO {
     private final String message;
 
-    private ErrorMessageDTO(String message) {
+    public ErrorMessageDTO(String message) {
         this.message = message;
     }
 

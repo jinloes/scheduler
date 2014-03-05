@@ -37,7 +37,9 @@ public class SchedulerExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public @ResponseBody ResponseEntity handleValidationFailure(MethodArgumentNotValidException e) {
+    public
+    @ResponseBody
+    ResponseEntity handleValidationFailure(MethodArgumentNotValidException e) {
         LOGGER.error("Validation failed", e);
         List<FieldErrorDTO> errors = Lists.newArrayList();
         for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
@@ -51,31 +53,32 @@ public class SchedulerExceptionHandler {
     }
 
     @ExceptionHandler(MessageArgumentException.class)
-    public @ResponseBody ResponseEntity handleMessageArgumentException(MessageArgumentException e) {
+    public
+    @ResponseBody
+    ResponseEntity handleMessageArgumentException(MessageArgumentException e) {
         String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), e.getArgs());
         LOGGER.error(errorMessage, e);
-        return new ResponseEntity<>(ErrorMessageDTO.builder()
-                .withMessage(errorMessage)
-                .build(), e.getHttpStatus());
+        return new ResponseEntity<>(new ErrorMessageDTO(errorMessage), e.getHttpStatus());
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public @ResponseBody ResponseEntity<ErrorMessageDTO> handleResponseStatusException(
+    public
+    @ResponseBody
+    ResponseEntity<ErrorMessageDTO> handleResponseStatusException(
             ResponseStatusException e) {
         String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), null);
         LOGGER.error(errorMessage, e);
-        return new ResponseEntity<>(ErrorMessageDTO.builder()
-                .withMessage(errorMessage)
-                .build(), e.getHttpStatus());
+        return new ResponseEntity<>(new ErrorMessageDTO(errorMessage), e.getHttpStatus());
     }
 
     @ExceptionHandler(Throwable.class)
-    public @ResponseBody ResponseEntity<ErrorMessageDTO> handleThrowable(Throwable e) {
+    public
+    @ResponseBody
+    ResponseEntity<ErrorMessageDTO> handleThrowable(Throwable e) {
         String errorMessage = resolveLocalizedErrorMessage(e.getMessage(), null);
         LOGGER.error(errorMessage, e);
-        return new ResponseEntity<>(ErrorMessageDTO.builder()
-                .withMessage(errorMessage)
-                .build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(new ErrorMessageDTO(errorMessage),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private String resolveLocalizedErrorMessage(FieldError fieldError) {

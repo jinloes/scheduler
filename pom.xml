@@ -15,7 +15,7 @@
     </modules>
 
     <properties>
-        <scheduler.version>0.24.0</scheduler.version>
+        <scheduler.version>0.25.0</scheduler.version>
     </properties>
 
     <parent>
