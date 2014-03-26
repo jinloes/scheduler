@@ -52,6 +52,9 @@ public class CassandraJobDAO implements JobDAO {
                             .value(ID_COL, job.getId())
                             .value(SCHEDULE_COL, job.getSchedule().toDate())
                             .value(STATUS_COL, job.getStatus().toString())
+                                    //TODO(jinloes) does it make sense to save the task object a
+                                    // a json
+                                    // object or should i make a whole another table?
                             .value(TASK_COL, objectMapper.writeValueAsString(job.getTask())));
         } catch (JsonProcessingException e) {
             throw new MessageArgumentException(ErrorCodes.JOB_SAVE_FAILED, e);

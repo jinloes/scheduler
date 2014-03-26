@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Created by jinloes on 3/24/14.
+ * Task that will periodically ping Cassandra for jobs ready to run and queue them up in Zookeeper.
  */
 @Component
 public class QueueJobsTask implements Runnable {
@@ -23,7 +23,7 @@ public class QueueJobsTask implements Runnable {
 
     @Override
     public void run() {
-        logger.debug(new DateTime() + " I'm leader!");
+        logger.debug("Checking for jobs ready to run.");
         jobService.queueJobs();
     }
 }

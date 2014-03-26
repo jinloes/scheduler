@@ -2,4 +2,4 @@
 REPOSITORY= 'scheduler'
 REVIEWBOARD_URL = 'https://rbcommons.com/s/rivermeadow'
 TARGET_GROUPS = 'Java'
-TRACKING_BRANCH = 'origin/master'
+TRACKING_BRANCH = 'origin/develop'

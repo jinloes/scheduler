@@ -32,10 +32,7 @@ public class JobImpl implements Job {
     @JsonCreator
     public JobImpl(@JsonProperty("task") final TaskImpl task,
             @JsonProperty("schedule") final String schedule) {
-        this.id = UUID.randomUUID();
-        this.task = task;
-        this.schedule = schedule;
-        this.status = Status.PENDING;
+        this(UUID.randomUUID(), task, schedule, Status.PENDING);
     }
 
     public JobImpl(UUID id, TaskImpl task, String schedule, Status status) {

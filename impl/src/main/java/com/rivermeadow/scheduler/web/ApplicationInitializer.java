@@ -28,6 +28,8 @@ import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
 import org.apache.http.impl.client.HttpClients;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,6 +54,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"com.rivermeadow.scheduler"})
 public class ApplicationInitializer {
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationInitializer.class);
     private static final String SCHEDULER_NAMESPACE = "scheduler";
     private static final Pattern COMMA_PATTERN = Pattern.compile(",");
     private static final String QUEUE_WATCHER_PATH = "/queue-watcher";
@@ -76,11 +79,11 @@ public class ApplicationInitializer {
 
     @PostConstruct
     public void afterContextCreated() {
-        // Elect a leader node that will look for jobs to add to the queue
         LeaderSelector leaderSelector = new LeaderSelector(curator, QUEUE_WATCHER_PATH,
                 new LeaderSelectorListenerAdapter() {
                     @Override
                     public void takeLeadership(CuratorFramework client) throws Exception {
+                        logger.debug("Taking leadership for job queueing.");
                         DefaultManagedTaskScheduler scheduler = new DefaultManagedTaskScheduler();
                         scheduler.scheduleAtFixedRate(queueJobsTask,
                                 TimeUnit.SECONDS.toMillis(queueTaskRateSecs));

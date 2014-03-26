@@ -15,10 +15,25 @@ import org.joda.time.DateTime;
  */
 public interface Job extends Serializable {
     enum Status {
+        /**
+         * The job failed.
+         */
         ERROR,
+        /**
+         * The job is the database waiting to be queued for execution.
+         */
         PENDING,
+        /**
+         * The job is in the execution queue and waiting.
+         */
         QUEUED,
+        /**
+         * The job is currently running.
+         */
         RUNNING,
+        /**
+         * The job successfully ran.
+         */
         SUCCESS;
 
         public static Status parse(String status) {
@@ -28,11 +43,17 @@ public interface Job extends Serializable {
 
     public static final String NOW = "now";
 
+    /**
+     * Returns the id.
+     *
+     * @return id
+     */
     UUID getId();
 
     /**
      * Returns a job's sechdule time as a {@link DateTime}.
-     * @return
+     *
+     * @return schedule time
      */
     DateTime getSchedule();
 
@@ -52,7 +73,18 @@ public interface Job extends Serializable {
     @JsonIgnore
     String getUriScheme();
 
+
+    /**
+     * Gets the job's current status.
+     *
+     * @return job's status
+     */
     Status getStatus();
 
+    /**
+     * Sets the job's status.
+     *
+     * @param status status
+     */
     void setStatus(Status status);
 }
