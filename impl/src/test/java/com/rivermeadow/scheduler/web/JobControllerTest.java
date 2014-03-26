@@ -13,6 +13,9 @@ import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.web.JobController;
 
 import org.apache.commons.io.IOUtils;
+import org.cassandraunit.CQLDataLoader;
+import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.cthul.matchers.CthulMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.SpringApplicationConfiguration;
@@ -27,6 +30,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -43,12 +47,32 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
     private static final String UUID_REGEX =
             "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$";
     private static final Pattern JOBS_PATTERN = Pattern.compile("/api/v1/jobs/" + UUID_REGEX);
+    private static final String CASSANDRA_KEYSPACE = "job_test";
+    private static String CASSANDRA_HOST = "127.0.0.1";
+    private static int CASSANDRA_PORT = 9142;
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;
 
+
+    @BeforeSuite
+    public void init() {
+        try {
+            EmbeddedCassandraServerHelper.startEmbeddedCassandra();
+            System.setProperty("cassandra.hosts", CASSANDRA_HOST);
+            System.setProperty("cassandra.port", Integer.toString(CASSANDRA_PORT));
+            System.setProperty("cassandra.keyspace", CASSANDRA_KEYSPACE);
+            CQLDataLoader cqlDataLoader = new CQLDataLoader(CASSANDRA_HOST, CASSANDRA_PORT);
+            cqlDataLoader.load(new ClassPathCQLDataSet("cql/job_tables.cql", true, true,
+                    CASSANDRA_KEYSPACE));
+        } catch (Exception e) {
+            throw new RuntimeException("failed to start cassandra");
+        }
+
+    }
+
     @BeforeClass
-    public void setUp() {
+    public void initMvc() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
     }
 
@@ -57,15 +81,11 @@ public class JobControllerTest extends AbstractTestNGSpringContextTests {
         return new Object[][]{
                 {
                         getRequest("post_job.json"), HttpMethod.POST,
-                        Lists.newArrayList(Job.Status.RUNNING.toString(),
-                                Job.Status.ERROR.toString())
+                        Lists.newArrayList(Job.Status.PENDING.toString())
                 },
-                // The first job will be running while the 2nd is queued up,
-                // or may have already failed
                 {
                         getRequest("put_job.json"), HttpMethod.PUT,
-                        Lists.newArrayList(Job.Status.PENDING.toString(),
-                                Job.Status.RUNNING.toString(), Job.Status.ERROR.toString())
+                        Lists.newArrayList(Job.Status.PENDING.toString())
                 }
         };
     }

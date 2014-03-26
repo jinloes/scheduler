@@ -1,12 +1,12 @@
 package com.rivermeadow.scheduler.web;
 
-import java.util.Map;
-
 import javax.validation.Valid;
 
 import com.google.common.collect.ImmutableMap;
+import com.rivermeadow.api.exception.NotFoundException;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.service.JobService;
+import com.rivermeadow.api.util.ErrorCodes;
 import com.rivermeadow.api.web.JobController;
 import com.rivermeadow.api.web.JsonPost;
 import com.rivermeadow.scheduler.model.JobImpl;
@@ -35,21 +35,33 @@ public class JobControllerImpl implements JobController<JobImpl> {
     @Override
     @RequestMapping(value = "/{jobId}", method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody Job getJob(@PathVariable("jobId") final String jobId) {
-        return jobService.getJob(jobId);
+    public
+    @ResponseBody
+    Job getJob(@PathVariable("jobId") final String jobId) {
+        Job job = jobService.getJob(jobId);
+        if (job == null) {
+            throw new NotFoundException(ErrorCodes.JOB_NOT_FOUND, jobId);
+        }
+        return job;
     }
 
     @Override
     @JsonPost
     public ResponseEntity scheduleJob(@RequestBody @Valid final JobImpl job) {
-        jobService.queueJob(job);
+        jobService.saveJob(job);
         String jobId = job.getId().toString();
-        Map<String, Object> response = ImmutableMap.<String, Object>of("id", jobId,
-                "link", getJobLink(jobId));
-        return new ResponseEntity(response, HttpStatus.CREATED);
+        return new ScheduleJobResponse(jobId, getJobLink(jobId));
     }
 
     private String getJobLink(String jobId) {
         return String.format(JOB_LINK, ApplicationInitializer.APPLICATION_ROOT_PATH, jobId);
+    }
+
+    private static class ScheduleJobResponse extends ResponseEntity {
+        public ScheduleJobResponse(String id, String link) {
+            super(ImmutableMap.<String, Object>of(
+                    "id", id,
+                    "link", link), HttpStatus.CREATED);
+        }
     }
 }

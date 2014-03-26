@@ -1,7 +1,9 @@
-package com.rivermeadow.api.util;
+package com.rivermeadow.scheduler.util;
 
-import com.rivermeadow.api.dao.JobDAO;
+import com.rivermeadow.scheduler.dao.JobDAO;
 import com.rivermeadow.api.model.Job;
+import com.rivermeadow.api.util.JobExecutor;
+import com.rivermeadow.api.util.JobListener;
 
 /**
  * Base class for executing jobs.
@@ -33,8 +35,7 @@ public abstract class AbstractJobExecutor implements JobExecutor {
 
     private void beforeJobExecution(Job job) {
         // Job is about to run, so update status
-        job.setStatus(Job.Status.RUNNING);
-        jobDAO.updateJob(job);
+        jobDAO.updateStatus(job.getId(), Job.Status.RUNNING);
         jobListener.beforeJobExecution(job);
     }
 
@@ -47,8 +48,7 @@ public abstract class AbstractJobExecutor implements JobExecutor {
 
     private void onJobSuccess(Job job) {
         // Job completed successfully update and return
-        job.setStatus(Job.Status.SUCCESS);
-        jobDAO.updateJob(job);
+        jobDAO.updateStatus(job.getId(), Job.Status.SUCCESS);
         jobListener.onJobSuccess(job);
     }
 

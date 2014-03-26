@@ -1,22 +1,26 @@
 package com.rivermeadow.scheduler.util;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.rivermeadow.api.dao.JobDAO;
+import com.rivermeadow.scheduler.dao.JobDAO;
 import com.rivermeadow.api.exception.MessageArgumentException;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.model.ResponseCodeRange;
 import com.rivermeadow.scheduler.model.JobImpl;
 import com.rivermeadow.scheduler.model.TaskImpl;
 
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import mockit.Expectations;
@@ -30,11 +34,20 @@ public class HttpJobExecutorTest {
     private static final String URI = "http://www.google.com";
     private static final Map<String, Object> REQUEST_MAP = ImmutableMap.<String, Object>of(
             "content", "blah");
-    private static final HttpEntity<Map<String, Object>> REQUEST_BODY =
-            new HttpEntity<>(REQUEST_MAP);
+    private static final HttpEntity<Map<String, Object>> REQUEST_BODY;
     @Injectable private RestTemplate restTemplate;
     @Injectable private JobDAO jobDao;
     @Tested private HttpJobExecutor jobExecutor;
+
+    static {
+        String auth = "admin@rivermeadow.com" + ":" + "secret";
+        String encodedAuth = Base64.encodeBase64String(
+                auth.getBytes(Charset.forName("US-ASCII")));
+        String authHeader = "Basic " + new String(encodedAuth);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", authHeader);
+        REQUEST_BODY = new HttpEntity<>(REQUEST_MAP, headers);
+    }
 
     @Test
     public void testExecuteJob() {
@@ -77,14 +90,11 @@ public class HttpJobExecutorTest {
         final Job job = new JobImpl(new TaskImpl(URI, "GET", REQUEST_MAP,
                 Lists.newArrayList(new ResponseCodeRange(200, 200))), "now");
         job.setStatus(Job.Status.RUNNING);
-        final Job failedJob = new JobImpl(new TaskImpl(URI, "GET", REQUEST_MAP,
-                Lists.newArrayList(new ResponseCodeRange(200, 200))), "now");
-        failedJob.setStatus(Job.Status.ERROR);
         new Expectations() {{
-            jobDao.updateJob(job);
+            jobDao.updateStatus(job.getId(), Job.Status.RUNNING);
             restTemplate.exchange(URI, HttpMethod.GET, REQUEST_BODY, Map.class);
             result = new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed");
-            jobDao.updateJob(failedJob);
+            jobDao.updateStatus(job.getId(), Job.Status.ERROR);
         }};
         jobExecutor.execute(job);
     }

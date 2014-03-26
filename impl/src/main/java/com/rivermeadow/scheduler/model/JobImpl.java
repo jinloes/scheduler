@@ -38,6 +38,13 @@ public class JobImpl implements Job {
         this.status = Status.PENDING;
     }
 
+    public JobImpl(UUID id, TaskImpl task, String schedule, Status status) {
+        this.id = id;
+        this.task = task;
+        this.schedule = schedule;
+        this.status = status;
+    }
+
     @Override
     public UUID getId() {
         return id;

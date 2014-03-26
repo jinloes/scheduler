@@ -17,8 +17,13 @@ public interface Job extends Serializable {
     enum Status {
         ERROR,
         PENDING,
+        QUEUED,
         RUNNING,
-        SUCCESS
+        SUCCESS;
+
+        public static Status parse(String status) {
+            return Status.valueOf(status.toUpperCase());
+        }
     }
 
     public static final String NOW = "now";

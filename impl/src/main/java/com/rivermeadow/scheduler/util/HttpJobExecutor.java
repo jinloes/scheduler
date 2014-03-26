@@ -1,19 +1,22 @@
 package com.rivermeadow.scheduler.util;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
-import com.rivermeadow.api.dao.JobDAO;
+import com.rivermeadow.scheduler.dao.JobDAO;
 import com.rivermeadow.api.exception.MessageArgumentException;
 import com.rivermeadow.api.model.Job;
 import com.rivermeadow.api.model.ResponseCodeRange;
-import com.rivermeadow.api.util.AbstractJobExecutor;
 import com.rivermeadow.api.util.ErrorCodes;
 import com.rivermeadow.api.util.JobExecutor;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -38,8 +41,16 @@ public class HttpJobExecutor extends AbstractJobExecutor {
         String methodStr = job.getTask().getMethod().toLowerCase();
         //TODO(jinloes) should we support GET?
         HttpMethod method = HttpMethod.valueOf(methodStr.toUpperCase());
+        //TODO(jinloes) externalize the auth and use user created just for scheduler: see RM-592
+        //TODO(jinloes) the API will have to send the auth credentials to be used for the callback
+        // so this can be generic
+        ApiRequest request = ApiRequest.builder()
+                .withBasicAuthUsername("admin@rivermeadow.com")
+                .withBasicAuthPassword("secret")
+                .withBody(job.getTask().getBody())
+                .build();
         ResponseEntity<Map> response = restTemplate.exchange(job.getTask().getUri(),
-                method, new HttpEntity<>(job.getTask().getBody()), Map.class);
+                method, request, Map.class);
         int statusCode = response.getStatusCode().value();
         checkExpectedRange(job.getTask().getResponseCodeRanges(), statusCode);
     }
@@ -74,14 +85,63 @@ public class HttpJobExecutor extends AbstractJobExecutor {
         public void onJobFailure(Exception e, Job job) {
             if (e instanceof RestClientException) {
                 // Return gracefully because we don't want a job with an http error to be requeued
-                job.setStatus(Job.Status.ERROR);
-                jobDAO.updateJob(job);
+                jobDAO.updateStatus(job.getId(), Job.Status.ERROR);
             } else if (e instanceof RuntimeException) {
                 throw (RuntimeException) e;
             } else {
                 // Wrap the exception
                 //TODO(jinloes) see if there's a better way to wrap this exception
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    /**
+     * Creates a request to be sent to the API.
+     */
+    private static class ApiRequest extends HttpEntity<Object> {
+
+        private ApiRequest(HttpHeaders httpHeaders, Object body) {
+            super(body, httpHeaders);
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public static class Builder {
+            private static final String BASIC_AUTH_STR_FMT = "%s:%s";
+            private String basicAuthUsername;
+            private String basicAuthPassword;
+            private Object body;
+
+            public Builder withBasicAuthUsername(String username) {
+                this.basicAuthUsername = username;
+                return this;
+            }
+
+            public Builder withBasicAuthPassword(String password) {
+                this.basicAuthPassword = password;
+                return this;
+            }
+
+            private Builder withBody(Object body) {
+                this.body = body;
+                return this;
+            }
+
+            public ApiRequest build() {
+                HttpHeaders httpHeaders = new HttpHeaders();
+                if(StringUtils.isNotEmpty(basicAuthUsername) &&
+                        StringUtils.isNotEmpty(basicAuthPassword)) {
+                    String authStr = String.format(BASIC_AUTH_STR_FMT, basicAuthUsername,
+                            basicAuthPassword);
+                    String encodedAuth = Base64.encodeBase64String(
+                            authStr.getBytes(Charset.forName("US-ASCII")));
+                    String authHeader = "Basic " + encodedAuth;
+                    httpHeaders.set("Authorization", authHeader);
+                }
+                return new ApiRequest(httpHeaders, body);
             }
         }
     }

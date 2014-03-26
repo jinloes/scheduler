@@ -11,7 +11,12 @@ public interface JobService {
      *
      * @param job job
      */
-    void queueJob(Job job);
+    void saveJob(Job job);
+
+    /**
+     * Queues up jobs that are ready to be executed.
+     */
+    void queueJobs();
 
     /**
      * Returns a job for the given job id.

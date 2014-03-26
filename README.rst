@@ -4,8 +4,8 @@ Scheduler
 
 :Date: 2014-1-29
 :Author: Jonathan Inloes
-:Version: 0.1
-:Updated: 2014-02-20
+:Version: 0.2
+:Updated: 2014-03-25
 
 Use Case
 --------
@@ -17,14 +17,46 @@ the scheduler only supports running jobs that interact with a REST interface.
 Architecture
 ------------
 
-The system is designed to be fully distributed, highly available, and resilient to
-failures. If a job is being executed and a scheduler node fails, then the job will be requeued to
-be executed immediately by another scheduler node. The scheduler system is backed by a Zookeeper_
-ensemble to provide the features previously described. The diagram below shows a typical workflow.
+The system is separated into an executor and storage tier. The executor tier uses a distributed
+queue_ implemented in Zookeeper_ that guarantees a consume will receive and process a message. The
+data tier uses Cassandra as a distributed database that guarantees there will be no single point of
+failure for retrieving data.
+
+One scheduler node is `leader elected`_ to be the master node that polls Cassandra at time
+intervals check for jobs ready to be run. If this master node fails, then another node will be
+elected as the leader to poll Cassandra. This guarantees that unless total Zookeeper or Scheduler
+failure there will always be a scheduler that queues jobs to be executed.
+
+When a job is placed in the distributed queue managed by Zookeeper, one scheduler node will be
+guaranteed to receive the job. If a scheduler node fails while processing a job, then the job will
+be assigned to another scheduler node.
+
+Typical Flow
+------------
+
+#. API request to schedule migration is made (Client)
+#. API POSTs the migration job to the scheduler
+#. Scheduler receives the job and saves it in Cassandra
+#. Scheduler `leader elected`_ task finds a job to execute and adds the job to the queue
+#. Scheduler queue consumer receives the job and executes the job
 
 .. image:: docs/images/architecture.png
     :width: 400px
     :alt: scheduler architecture
+
+Fault Tolerance
+---------------
+
+- Cassandra data center crashes
+    - The scheduler would switch to one of the other Cassandra data centers to queue up jobs
+    - Data is also preserved if ALL the centers were to simultaneously crash
+    - In complete failure, jobs might not be updated to a finished state while executing, that is, a job might execute but there would be no way to update it's state in Cassandra
+- A scheduler node crashes
+    - A new node will be leader elected and take control of job selection tasks
+    - Nodes that crash while executing a job would have the job reassigned to another node through Zookeeper
+- Zookeeper node crashes
+    - Scheduler would failover to another working Zookeeper node
+    - Currently executing jobs would finish normally, however in complete failure, no new jobs could be executed
 
 How to run
 ----------
@@ -34,7 +66,7 @@ java -jar scheduler.jar -D<**System Property**>=<value>
 Configuration
 ^^^^^^^^^^^^^
 
-The following system options can be specified
+The following system properties can be specified
 
 ================================== ================================================= ==============
 Parameter                          Description                                       Default
@@ -42,8 +74,12 @@ Parameter                          Description                                  
 zookeeper.connect_url              Comma separated list of Zookeeper host:port pairs localhost:2181
 zookeeper.wait_time_ms             Milliseconds to wait for Zookeeper connection     100
 zookeeper.sleep_between_retries_ms Milliseconds to wait between connection attempts  5
+cassandra.hosts                    Comma separated list of Cassandra hosts           localhost
+cassandra.port                     Cassandra port                                    9042
+cassandra.keyspace                 Cassandra keyspace                                scheduler
+cassandra.poll.rate                Cassandra polling delay in seconds                15
+server.port                        `Spring Boot`_ setting, container port            8080
 ================================== ================================================= ==============
-
 
 REST API
 --------
@@ -167,3 +203,6 @@ Common Response Codes
 
 .. _Zookeeper: http://zookeeper.apache.org/
 .. _ISO 8601: http://en.wikipedia.org/wiki/ISO_8601
+.. _leader elected: http://curator.apache.org/curator-recipes/leader-election.html
+.. _queue: http://curator.apache.org/curator-recipes/distributed-queue.html
+.. _Spring Boot: http://projects.spring.io/spring-boot/
