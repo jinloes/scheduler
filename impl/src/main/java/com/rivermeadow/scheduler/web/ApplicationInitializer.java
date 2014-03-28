@@ -10,19 +10,12 @@ import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.rivermeadow.api.exception.MessageArgumentException;
-import com.rivermeadow.api.model.Job;
-import com.rivermeadow.api.util.ErrorCodes;
 import com.rivermeadow.scheduler.util.QueueJobsTask;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListenerAdapter;
-import org.apache.curator.framework.recipes.queue.DistributedQueue;
-import org.apache.curator.framework.recipes.queue.QueueBuilder;
-import org.apache.curator.framework.recipes.queue.QueueConsumer;
-import org.apache.curator.framework.recipes.queue.QueueSerializer;
 import org.apache.curator.retry.RetryUntilElapsed;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
@@ -59,8 +52,6 @@ public class ApplicationInitializer {
     private static final Pattern COMMA_PATTERN = Pattern.compile(",");
     private static final String QUEUE_WATCHER_PATH = "/queue-watcher";
     public static final String APPLICATION_ROOT_PATH = "/api/v1";
-    private static final String JOBS_PATH = "/jobs";
-    private static final String JOB_LOCKS_PATH = "/locks";
     @Value("#{systemProperties['cassandra.poll.rate']?: 15}")
     private int queueTaskRateSecs;
 
@@ -133,22 +124,6 @@ public class ApplicationInitializer {
                 .build();
         curator.start();
         return curator;
-    }
-
-    @Bean
-    @Autowired
-    public DistributedQueue<Job> jobQueue(final CuratorFramework client,
-            final QueueConsumer<Job> jobConsumer, final QueueSerializer<Job> serializer) {
-        DistributedQueue<Job> jobQueue = QueueBuilder.builder(
-                client, jobConsumer, serializer, JOBS_PATH)
-                .lockPath(JOB_LOCKS_PATH)
-                .buildQueue();
-        try {
-            jobQueue.start();
-        } catch (Exception e) {
-            throw new MessageArgumentException(ErrorCodes.JOB_QUEUE_CREATE_FAILED, e);
-        }
-        return jobQueue;
     }
 
     @Bean
