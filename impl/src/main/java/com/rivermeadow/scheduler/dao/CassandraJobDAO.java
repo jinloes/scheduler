@@ -45,7 +45,7 @@ public class CassandraJobDAO implements JobDAO {
     }
 
     @Override
-    public void saveJob(Job job) {
+    public void save(Job job) {
         try {
             session.execute(
                     insertInto(JOB_TABLE)
@@ -62,23 +62,24 @@ public class CassandraJobDAO implements JobDAO {
     }
 
     @Override
-    public Job getJob(String id) {
+    public Job getById(UUID id) {
         ResultSet rs = session.execute(
                 select(ID_COL, STATUS_COL, TASK_COL, SCHEDULE_COL)
                         .from(JOB_TABLE)
-                        .where(eq(ID_COL, UUID.fromString(id))));
+                        .where(eq(ID_COL, id)));
         return rowConverter.convert(rs.one());
     }
 
     @Override
-    public List<Job> getJobsBeforeNow() {
+    public List<Job> getJobsBeforeDate(Job.Status status, Date date, int limit) {
         List<Job> jobs = Lists.newArrayList();
         ResultSet rs = session.execute(
                 select(ID_COL, STATUS_COL, TASK_COL, SCHEDULE_COL)
                         .from(JOB_TABLE)
                         .allowFiltering()
-                        .where(lte(SCHEDULE_COL, new Date()))
-                        .and(eq(STATUS_COL, Job.Status.PENDING.toString())));
+                        .limit(limit)
+                        .where(lte(SCHEDULE_COL, date))
+                        .and(eq(STATUS_COL, status.toString())));
         for (Row row : rs) {
             jobs.add(rowConverter.convert(row));
         }

@@ -1,10 +1,13 @@
 package com.rivermeadow.scheduler.web;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.joda.time.DateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
@@ -31,6 +34,17 @@ public class CustomMatchers {
      */
     public static IsErrorField isErrorField(Map<String, String> expectedErrorField) {
         return new IsErrorField(expectedErrorField);
+    }
+
+    /**
+     * Creates a {@link IsBeforeOrEqualToDate} matcher.
+     *
+     * @param expectedDate expected date
+     *
+     * @return date matcher
+     */
+    public static IsBeforeOrEqualToDate isBeforeOrEqualToDate(Date expectedDate) {
+        return new IsBeforeOrEqualToDate(expectedDate);
     }
 
     /**
@@ -98,6 +112,28 @@ public class CustomMatchers {
         @Override
         public void describeTo(Description description) {
             description.appendText(expectedErrorField.toString());
+        }
+    }
+
+    /**
+     * Checks if a date is before or equal to another
+     */
+    public static class IsBeforeOrEqualToDate extends BaseMatcher<Date> {
+        private Date beforeDate;
+
+        public IsBeforeOrEqualToDate(Date beforeDate) {
+            this.beforeDate = beforeDate;
+        }
+
+        @Override
+        public boolean matches(Object item) {
+            Date actual = (Date) item;
+            return actual.before(beforeDate) || actual.equals(beforeDate);
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("is before or equal to " + beforeDate);
         }
     }
 }

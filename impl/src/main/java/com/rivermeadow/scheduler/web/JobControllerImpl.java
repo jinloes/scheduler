@@ -1,5 +1,7 @@
 package com.rivermeadow.scheduler.web;
 
+import java.util.UUID;
+
 import javax.validation.Valid;
 
 import com.google.common.collect.ImmutableMap;
@@ -35,10 +37,8 @@ public class JobControllerImpl implements JobController<JobImpl> {
     @Override
     @RequestMapping(value = "/{jobId}", method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public
-    @ResponseBody
-    Job getJob(@PathVariable("jobId") final String jobId) {
-        Job job = jobService.getJob(jobId);
+    public @ResponseBody Job getJob(@PathVariable("jobId") final String jobId) {
+        Job job = jobService.getById(UUID.fromString(jobId));
         if (job == null) {
             throw new NotFoundException(ErrorCodes.JOB_NOT_FOUND, jobId);
         }
@@ -48,7 +48,7 @@ public class JobControllerImpl implements JobController<JobImpl> {
     @Override
     @JsonPost
     public ResponseEntity scheduleJob(@RequestBody @Valid final JobImpl job) {
-        jobService.saveJob(job);
+        jobService.save(job);
         String jobId = job.getId().toString();
         return new ScheduleJobResponse(jobId, getJobLink(jobId));
     }

@@ -1,5 +1,6 @@
 package com.rivermeadow.scheduler.dao;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,23 +15,25 @@ public interface JobDAO {
      *
      * @param job job
      */
-    void saveJob(Job job);
+    void save(Job job);
 
     /**
      * Returns a job for the given id.
      *
      * @param id id
-     *
-     * @return job
+     * @return job for the given id, otherwise null
      */
-    Job getJob(String id);
+    Job getById(UUID id);
 
     /**
-     * Return jobs before the current date that are pending to be run.
+     * Return jobs before the provided date and equal to the status.
      *
-     * @return list of jobs
+     * @param status job status
+     * @param date   date upper bound
+     *
+     * @return list of jobs, empty list if none are found
      */
-    List<Job> getJobsBeforeNow();
+    List<Job> getJobsBeforeDate(Job.Status status, Date date, int limit);
 
     /**
      * Updates the job. Old job data will be overwritten.
@@ -42,7 +45,7 @@ public interface JobDAO {
     /**
      * Updates a job's status.
      *
-     * @param jobId job id
+     * @param jobId  job id
      * @param status status
      */
     void updateStatus(UUID jobId, Job.Status status);

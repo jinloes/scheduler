@@ -1,5 +1,7 @@
 package com.rivermeadow.api.service;
 
+import java.util.UUID;
+
 import com.rivermeadow.api.model.Job;
 
 /**
@@ -11,10 +13,10 @@ public interface JobService {
      *
      * @param job job
      */
-    void saveJob(Job job);
+    void save(Job job);
 
     /**
-     * Queues up jobs that are ready to be executed.
+     * Finds jobs that are in the pending state and have an execution date before now.
      */
     void queueJobs();
 
@@ -25,5 +27,5 @@ public interface JobService {
      *
      * @return job if one exists
      */
-    Job getJob(String jobId);
+    Job getById(UUID jobId);
 }
