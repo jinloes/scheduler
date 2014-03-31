@@ -67,7 +67,7 @@ Fault Tolerance
 Bootstrapping
 -------------
 
-Execute `CQL script <misc/cassandra/create_tables.sql>`_
+Execute `CQL script <misc/cassandra/create_tables.cql>`_
 
 How to run
 ----------
