@@ -5,12 +5,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import com.beust.jcommander.internal.Lists;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.rivermeadow.scheduler.exception.MessageArgumentException;
 import com.rivermeadow.scheduler.model.Job;
 import com.rivermeadow.scheduler.util.ErrorCodes;
