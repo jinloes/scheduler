@@ -6,16 +6,11 @@
 
     <groupId>com.rivermeadow</groupId>
     <artifactId>scheduler</artifactId>
-    <packaging>pom</packaging>
     <version>${scheduler.version}</version>
-
-    <modules>
-        <module>api</module>
-        <module>impl</module>
-    </modules>
+    <packaging>jar</packaging>
 
     <properties>
-        <scheduler.version>0.25.0</scheduler.version>
+        <scheduler.version>0.26.0</scheduler.version>
     </properties>
 
     <parent>
@@ -25,6 +20,14 @@
     </parent>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.googlecode.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>1.5</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -147,6 +150,27 @@
             <version>2.0.0-rc1</version>
         </dependency>
 
+        <!-- Testing dependencies -->
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <version>1.0.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.cassandraunit</groupId>
+            <artifactId>cassandra-unit-spring</artifactId>
+            <version>2.0.2.0</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -172,6 +196,8 @@
     </pluginRepositories>
 
     <build>
+        <!-- build.number comes from teamcity, locally it will just be null-->
+        <finalName>scheduler-${scheduler.version}-${build.number}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -181,6 +207,18 @@
                     <source>1.7</source>
                     <target>1.7</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>1.0.0.RC1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
