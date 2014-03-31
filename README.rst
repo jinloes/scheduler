@@ -63,6 +63,12 @@ Fault Tolerance
     - Unless completele failure, scheduler would failover to another working Zookeeper node
     - Currently executing jobs would finish normally, however in complete failure, no new jobs could be executed
 
+
+Bootstrapping
+-------------
+
+Execute `CQL script <misc/cassandra/create_tables.sql>`_
+
 How to run
 ----------
 
