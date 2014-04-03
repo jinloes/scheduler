@@ -84,6 +84,20 @@ public class ApplicationInitializer {
     }
 
     @Bean
+    public String apiUsername(
+            @Value("#{systemProperties['scheduler.api.username']?: " +
+                    "'scheduler-user@rivermeadow.com'}")
+            String username) {
+        return username;
+    }
+
+    @Bean
+    public String apiPassword(
+            @Value("#{systemProperties['scheduler.api.password']?: 'secret'}") String password) {
+        return password;
+    }
+
+    @Bean
     public ServletRegistrationBean dispatcherRegistration(DispatcherServlet dispatcherServlet) {
         ServletRegistrationBean registration = new ServletRegistrationBean(dispatcherServlet);
         registration.addUrlMappings(APPLICATION_ROOT_PATH + "/*");

@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
 import mockit.Expectations;
@@ -33,16 +34,19 @@ public class HttpJobExecutorTest {
     private static final String URI = "http://www.google.com";
     private static final Map<String, Object> REQUEST_MAP = ImmutableMap.<String, Object>of(
             "content", "blah");
-    private static final HttpEntity<Map<String, Object>> REQUEST_BODY;
+    private HttpEntity<Map<String, Object>> REQUEST_BODY;
     @Injectable private RestTemplate restTemplate;
     @Injectable private JobDAO jobDao;
+    @Injectable private String apiUsername = "username";
+    @Injectable private String apiPassword = "password";
     @Tested private HttpJobExecutor jobExecutor;
 
-    static {
-        String auth = "admin@rivermeadow.com" + ":" + "secret";
+    @BeforeSuite
+    public void init() {
+        String auth = apiUsername + ":" + apiPassword;
         String encodedAuth = Base64.encodeBase64String(
                 auth.getBytes(Charset.forName("US-ASCII")));
-        String authHeader = "Basic " + new String(encodedAuth);
+        String authHeader = "Basic " + encodedAuth;
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", authHeader);
         REQUEST_BODY = new HttpEntity<>(REQUEST_MAP, headers);

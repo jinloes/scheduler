@@ -13,6 +13,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,11 +28,17 @@ import org.springframework.web.client.RestTemplate;
 @Component("http")
 public class HttpJobExecutor extends AbstractJobExecutor {
     private final RestTemplate restTemplate;
+    private final String apiUsername;
+    private final String apiPassword;
 
     @Autowired
-    public HttpJobExecutor(final RestTemplate restTemplate, final JobDAO jobDAO) {
+    public HttpJobExecutor(RestTemplate restTemplate, JobDAO jobDAO,
+            @Qualifier("apiUsername") String apiUsername,
+            @Qualifier("apiPassword") String apiPassword) {
         super(jobDAO, new HttpJobListener(jobDAO));
         this.restTemplate = restTemplate;
+        this.apiUsername = apiUsername;
+        this.apiPassword = apiPassword;
     }
 
     @Override
@@ -39,12 +46,11 @@ public class HttpJobExecutor extends AbstractJobExecutor {
         String methodStr = job.getTask().getMethod().toLowerCase();
         //TODO(jinloes) should we support GET?
         HttpMethod method = HttpMethod.valueOf(methodStr.toUpperCase());
-        //TODO(jinloes) externalize the auth and use user created just for scheduler: see RM-592
-        //TODO(jinloes) the API will have to send the auth credentials to be used for the callback
-        // so this can be generic
+        // Right now this is tied to system params from the scheduler
+        // We might want a client to provide the auth as part of the job request
         ApiRequest request = ApiRequest.builder()
-                .withBasicAuthUsername("admin@rivermeadow.com")
-                .withBasicAuthPassword("secret")
+                .withBasicAuthUsername(apiUsername)
+                .withBasicAuthPassword(apiPassword)
                 .withBody(job.getTask().getBody())
                 .build();
         ResponseEntity<Map> response = restTemplate.exchange(job.getTask().getUri(),

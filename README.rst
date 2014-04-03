@@ -79,18 +79,21 @@ Configuration
 
 The following system properties can be specified
 
-================================== ================================================= ==============
-Parameter                          Description                                       Default
-================================== ================================================= ==============
-zookeeper.connect_url              Comma separated list of Zookeeper host:port pairs localhost:2181
-zookeeper.wait_time_ms             Milliseconds to wait for Zookeeper connection     100
-zookeeper.sleep_between_retries_ms Milliseconds to wait between connection attempts  5
-cassandra.hosts                    Comma separated list of Cassandra hosts           localhost
-cassandra.port                     Cassandra port                                    9042
-cassandra.keyspace                 Cassandra keyspace                                scheduler
-cassandra.poll.rate                Cassandra polling delay in seconds                15
-server.port                        `Spring Boot`_ setting, container port            8080
-================================== ================================================= ==============
+================================== ==================================================== ==============================
+Parameter                          Description                                          Default
+================================== ==================================================== ==============================
+zookeeper.connect_url              Comma separated list of Zookeeper host:port pairs    localhost:2181
+zookeeper.wait_time_ms             Milliseconds to wait for Zookeeper connection        100
+zookeeper.sleep_between_retries_ms Milliseconds to wait between connection attempts     5
+cassandra.hosts                    Comma separated list of Cassandra hosts              localhost
+cassandra.port                     Cassandra port                                       9042
+cassandra.keyspace                 Cassandra keyspace                                   scheduler
+cassandra.poll.rate                Cassandra polling delay in seconds                   15
+server.port                        `Spring Boot`_ setting, container port               8080
+scheduler.api.username             API Scheduler username                               scheduler-user@rivermeadow.com
+scheduler.api.password             API Scheduler user password                          scheduler
+                                   Note: This should be different for every environment
+================================== ==================================================== ==============================
 
 REST API
 --------
