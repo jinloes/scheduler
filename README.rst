@@ -93,7 +93,7 @@ cassandra.keyspace                 Cassandra keyspace                           
 cassandra.poll.rate                Cassandra polling delay in seconds                   15
 server.port                        `Spring Boot`_ setting, container port               8080
 scheduler.api.username             API Scheduler username                               scheduler-user@rivermeadow.com
-scheduler.api.password             API Scheduler user password                          scheduler
+scheduler.api.password             API Scheduler user password                          secret
                                    Note: This should be different for every environment
 ================================== ==================================================== ==============================
 
