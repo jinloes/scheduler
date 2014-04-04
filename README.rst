@@ -69,6 +69,7 @@ Bootstrapping
 -------------
 
 Execute `CQL script <misc/cassandra/create_tables.cql>`_
+**Note**: Enter in the datacenter where specified
 
 How to run
 ----------
