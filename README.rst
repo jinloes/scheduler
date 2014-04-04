@@ -5,7 +5,7 @@ Scheduler
 :Date: 2014-1-29
 :Author: Jonathan Inloes
 :Version: 0.2
-:Updated: 2014-03-27
+:Updated: 2014-04-3
 
 Use Case
 --------
@@ -19,6 +19,7 @@ Requirements
 
 - Zookeeper_ ensemble
 - Cassandra_ cluster
+- A scheduler user existing in the phoenix keyspace so that callbacks to the FE can be made
 
 Architecture
 ------------
@@ -68,6 +69,7 @@ Bootstrapping
 -------------
 
 Execute `CQL script <misc/cassandra/create_tables.cql>`_
+**Note**: Enter in the datacenter where specified
 
 How to run
 ----------
@@ -91,7 +93,7 @@ cassandra.keyspace                 Cassandra keyspace                           
 cassandra.poll.rate                Cassandra polling delay in seconds                   15
 server.port                        `Spring Boot`_ setting, container port               8080
 scheduler.api.username             API Scheduler username                               scheduler-user@rivermeadow.com
-scheduler.api.password             API Scheduler user password                          scheduler
+scheduler.api.password             API Scheduler user password                          secret
                                    Note: This should be different for every environment
 ================================== ==================================================== ==============================
 
