@@ -5,7 +5,7 @@ CREATE KEYSPACE scheduler WITH REPLICATION = {'class' : 'NetworkTopologyStrategy
 use scheduler;
 
 /*
-    Create a job table with id partition key and clustered by status and schedule.
+    Job table with id partition key and clustered by status and schedule.
     This allows for querying by id, status, and schedule. However, allow filtering will have to be
     used to retrieve dates before a specific date.
 */
