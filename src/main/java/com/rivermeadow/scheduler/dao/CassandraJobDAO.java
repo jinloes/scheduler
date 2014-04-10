@@ -17,6 +17,7 @@ import com.rivermeadow.scheduler.util.ErrorCodes;
 import com.rivermeadow.scheduler.model.JobImpl;
 import com.rivermeadow.scheduler.model.TaskImpl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -76,10 +77,11 @@ public class CassandraJobDAO implements JobDAO {
         ResultSet rs = session.execute(
                 select(ID_COL, STATUS_COL, TASK_COL, SCHEDULE_COL)
                         .from(JOB_TABLE)
-                        .allowFiltering()
                         .limit(limit)
-                        .where(lte(SCHEDULE_COL, date))
-                        .and(eq(STATUS_COL, status.toString())));
+                        .allowFiltering()
+                        .where(eq(STATUS_COL, status.toString()))
+                        .and(lte(SCHEDULE_COL, date))
+        );
         for (Row row : rs) {
             jobs.add(rowConverter.convert(row));
         }
@@ -117,7 +119,11 @@ public class CassandraJobDAO implements JobDAO {
             }
            UUID jobId = row.getUUID(ID_COL);
             try {
-                TaskImpl task = objectMapper.readValue(row.getString(TASK_COL), TaskImpl.class);
+                String taskJson = row.getString(TASK_COL);
+                TaskImpl task = null;
+                if(StringUtils.isNotEmpty(taskJson)) {
+                    task = objectMapper.readValue(taskJson, TaskImpl.class);
+                }
                 Date date = row.getDate(SCHEDULE_COL);
                 return new JobImpl(jobId, task,
                         ISODateTimeFormat.dateTimeNoMillis().print(date.getTime()),
