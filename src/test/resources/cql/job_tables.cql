@@ -1,7 +1,13 @@
 CREATE TABLE job (
-  id        UUID,
-  task      TEXT,
-  schedule  TIMESTAMP,
-  status    TEXT,
-  PRIMARY KEY (id, status, schedule))
-  WITH CLUSTERING ORDER BY (status asc, schedule asc);
+    id        UUID PRIMARY KEY,
+    task      TEXT,
+    schedule  TIMESTAMP,
+    status    TEXT);
+
+CREATE TABLE job_by_status_schedule (
+    id        UUID,
+    task      TEXT,
+    schedule  TIMESTAMP,
+    status    TEXT,
+    PRIMARY KEY (status, schedule, id))
+    WITH CLUSTERING ORDER BY (schedule ASC);

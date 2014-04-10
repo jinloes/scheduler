@@ -31,6 +31,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 @Repository
 public class CassandraJobDAO implements JobDAO {
     private static final String JOB_TABLE = "job";
+    private static final String JOB_BY_STATUS_SCHEDULE_TABLE = "job_by_status_schedule";
     private static final String ID_COL = "id";
     private static final String SCHEDULE_COL = "schedule";
     private static final String STATUS_COL = "status";
@@ -48,15 +49,17 @@ public class CassandraJobDAO implements JobDAO {
     @Override
     public void save(Job job) {
         try {
-            session.execute(
+            session.execute(batch(
                     insertInto(JOB_TABLE)
                             .value(ID_COL, job.getId())
                             .value(SCHEDULE_COL, job.getSchedule().toDate())
                             .value(STATUS_COL, job.getStatus().toString())
-                                    //TODO(jinloes) does it make sense to save the task object a
-                                    // a json
-                                    // object or should i make a whole another table?
-                            .value(TASK_COL, objectMapper.writeValueAsString(job.getTask())));
+                            .value(TASK_COL, objectMapper.writeValueAsString(job.getTask())),
+                    insertInto(JOB_BY_STATUS_SCHEDULE_TABLE)
+                            .value(ID_COL, job.getId())
+                            .value(SCHEDULE_COL, job.getSchedule().toDate())
+                            .value(STATUS_COL, job.getStatus().toString())
+                            .value(TASK_COL, objectMapper.writeValueAsString(job.getTask()))));
         } catch (JsonProcessingException e) {
             throw new MessageArgumentException(ErrorCodes.JOB_SAVE_FAILED, e);
         }
@@ -76,9 +79,8 @@ public class CassandraJobDAO implements JobDAO {
         List<Job> jobs = Lists.newArrayList();
         ResultSet rs = session.execute(
                 select(ID_COL, STATUS_COL, TASK_COL, SCHEDULE_COL)
-                        .from(JOB_TABLE)
+                        .from(JOB_BY_STATUS_SCHEDULE_TABLE)
                         .limit(limit)
-                        .allowFiltering()
                         .where(eq(STATUS_COL, status.toString()))
                         .and(lte(SCHEDULE_COL, date))
         );
@@ -91,12 +93,17 @@ public class CassandraJobDAO implements JobDAO {
     @Override
     public void updateJob(Job job) {
         try {
-            session.execute(
+            session.execute(batch(
                     update(JOB_TABLE)
                             .with(set(SCHEDULE_COL, job.getSchedule().toDate()))
                             .and(set(STATUS_COL, job.getStatus().toString()))
                             .and(set(TASK_COL, objectMapper.writeValueAsString(job.getTask())))
-                            .where(eq(ID_COL, job.getId())));
+                            .where(eq(ID_COL, job.getId())),
+                    update(JOB_BY_STATUS_SCHEDULE_TABLE)
+                            .with(set(SCHEDULE_COL, job.getSchedule().toDate()))
+                            .and(set(STATUS_COL, job.getStatus().toString()))
+                            .and(set(TASK_COL, objectMapper.writeValueAsString(job.getTask())))
+                            .where(eq(ID_COL, job.getId()))));
         } catch (JsonProcessingException e) {
             throw new MessageArgumentException(ErrorCodes.JOB_UPDATE_FAILED, e, job.getId());
         }
@@ -105,10 +112,13 @@ public class CassandraJobDAO implements JobDAO {
 
     @Override
     public void updateStatus(UUID jobId, Job.Status status) {
-        session.execute(
+        session.execute(batch(
                 update(JOB_TABLE)
                         .with(set(STATUS_COL, status.toString()))
-                        .where(eq(ID_COL, jobId)));
+                        .where(eq(ID_COL, jobId)),
+                update(JOB_BY_STATUS_SCHEDULE_TABLE)
+                        .with(set(STATUS_COL, status.toString()))
+                        .where(eq(ID_COL, jobId))));
     }
 
     private final class RowConverter implements Converter<Row, Job> {

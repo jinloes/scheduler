@@ -3,3 +3,9 @@ INSERT INTO job (id, schedule, status) VALUES (4e463d81-c0d5-11e3-8a33-0800200c9
 INSERT INTO job (id, schedule, status) VALUES (4e463d82-c0d5-11e3-8a33-0800200c9a66, '2014-04-10T06:08:48+0000', 'PENDING');
 INSERT INTO job (id, schedule, status) VALUES (4e463d83-c0d5-11e3-8a33-0800200c9a66, '2014-04-13T06:08:48+0000', 'PENDING');
 INSERT INTO job (id, schedule, status) VALUES (4e466490-c0d5-11e3-8a33-0800200c9a66, '2014-04-11T06:08:48+0000', 'PENDING');
+
+INSERT INTO job_by_status_schedule (id, schedule, status) VALUES (4e463d80-c0d5-11e3-8a33-0800200c9a66, '2014-04-10T06:08:48+0000', 'PENDING');
+INSERT INTO job_by_status_schedule (id, schedule, status) VALUES (4e463d81-c0d5-11e3-8a33-0800200c9a66, '2014-04-08T06:08:48+0000', 'PENDING');
+INSERT INTO job_by_status_schedule (id, schedule, status) VALUES (4e463d82-c0d5-11e3-8a33-0800200c9a66, '2014-04-10T06:08:48+0000', 'PENDING');
+INSERT INTO job_by_status_schedule (id, schedule, status) VALUES (4e463d83-c0d5-11e3-8a33-0800200c9a66, '2014-04-13T06:08:48+0000', 'PENDING');
+INSERT INTO job_by_status_schedule (id, schedule, status) VALUES (4e466490-c0d5-11e3-8a33-0800200c9a66, '2014-04-11T06:08:48+0000', 'PENDING');

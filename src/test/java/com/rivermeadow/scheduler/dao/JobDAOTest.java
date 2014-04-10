@@ -6,11 +6,14 @@ import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.rivermeadow.scheduler.model.Job;
+import com.rivermeadow.scheduler.model.JobImpl;
 
 import org.cassandraunit.CQLDataLoader;
 import org.cassandraunit.dataset.cql.ClassPathCQLDataSet;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -43,6 +46,12 @@ public class JobDAOTest {
         }
     }
 
+    @BeforeMethod
+    public void setUp() {
+        dataLoader.load(new ClassPathCQLDataSet("cql/job_tables.cql", true, true,
+                CASSANDRA_KEYSPACE));
+    }
+
     @Test
     public void testGetJobsBeforeDate() {
         dataLoader.load(new ClassPathCQLDataSet("cql/get_jobs_before_date.cql", false, false));
@@ -54,5 +63,26 @@ public class JobDAOTest {
                 jobDAO.getById(UUID.fromString("4e463d80-c0d5-11e3-8a33-0800200c9a66")),
                 jobDAO.getById(UUID.fromString("4e463d82-c0d5-11e3-8a33-0800200c9a66")));
         assertThat(jobs, is(expected));
+    }
+
+    @Test
+    public void testSave() {
+        Job expected = new JobImpl(UUID.fromString("4e463d81-c0d5-11e3-8a33-0800200c9a66"), null,
+                "2014-04-10T06:08:48Z", Job.Status.PENDING);
+        jobDAO.save(expected);
+        Job actualJob = jobDAO.getById(expected.getId());
+        assertThat(actualJob.getId(), is(expected.getId()));
+        assertThat(actualJob.getStatus(), is(expected.getStatus()));
+        assertThat(actualJob.getSchedule(), is(expected.getSchedule()));
+        assertThat(actualJob.getTask(), is(expected.getTask()));
+        List<Job> actual = jobDAO.getJobsBeforeDate(Job.Status.PENDING,
+                ISODateTimeFormat.dateTimeNoMillis().parseDateTime("2014-04-10T06:08:48Z")
+                        .toDate(), 100
+        );
+        actualJob = actual.get(0);
+        assertThat(actualJob.getId(), is(expected.getId()));
+        assertThat(actualJob.getStatus(), is(expected.getStatus()));
+        assertThat(actualJob.getSchedule(), is(expected.getSchedule()));
+        assertThat(actualJob.getTask(), is(expected.getTask()));
     }
 }
