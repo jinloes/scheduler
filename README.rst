@@ -74,7 +74,10 @@ Execute `CQL script <misc/cassandra/create_tables.cql>`_
 How to run
 ----------
 
-java -jar scheduler.jar -D<**System Property**>=<value>
+java -D<**System Property**>=<value> -jar scheduler.jar
+
+
+Example java -Dlog.directory=/opt/rivermeadow -Dserver.port=9090 -jar scheduler.jar
 
 Configuration
 ^^^^^^^^^^^^^
@@ -95,6 +98,8 @@ server.port                        `Spring Boot`_ setting, container port       
 scheduler.api.username             API Scheduler username                               scheduler-user@rivermeadow.com
 scheduler.api.password             API Scheduler user password                          secret
                                    Note: This should be different for every environment
+log.directory                      log file location                                    /tmp
+                                   Note: The log file's name is scheduler.log
 ================================== ==================================================== ==============================
 
 REST API

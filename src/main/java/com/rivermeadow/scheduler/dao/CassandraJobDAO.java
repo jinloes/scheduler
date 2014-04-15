@@ -59,7 +59,8 @@ public class CassandraJobDAO implements JobDAO {
                             .value(ID_COL, job.getId())
                             .value(SCHEDULE_COL, job.getSchedule().toDate())
                             .value(STATUS_COL, job.getStatus().toString())
-                            .value(TASK_COL, objectMapper.writeValueAsString(job.getTask()))));
+                            .value(TASK_COL, objectMapper.writeValueAsString(job.getTask()))
+            ));
         } catch (JsonProcessingException e) {
             throw new MessageArgumentException(ErrorCodes.JOB_SAVE_FAILED, e);
         }
@@ -112,13 +113,24 @@ public class CassandraJobDAO implements JobDAO {
 
     @Override
     public void updateStatus(UUID jobId, Job.Status status) {
-        session.execute(batch(
-                update(JOB_TABLE)
-                        .with(set(STATUS_COL, status.toString()))
-                        .where(eq(ID_COL, jobId)),
-                update(JOB_BY_STATUS_SCHEDULE_TABLE)
-                        .with(set(STATUS_COL, status.toString()))
-                        .where(eq(ID_COL, jobId))));
+        Job job = getById(jobId);
+        try {
+            session.execute(batch(
+                    update(JOB_TABLE)
+                            .with(set(STATUS_COL, status.toString()))
+                            .where(eq(ID_COL, jobId)),
+                    delete().from(JOB_BY_STATUS_SCHEDULE_TABLE)
+                            .where(eq(STATUS_COL, job.getStatus().toString()))
+                            .and(eq(SCHEDULE_COL, job.getSchedule().toDate()))
+                            .and(eq(ID_COL, jobId)),
+                    insertInto(JOB_BY_STATUS_SCHEDULE_TABLE)
+                            .value(ID_COL, job.getId())
+                            .value(SCHEDULE_COL, job.getSchedule().toDate())
+                            .value(STATUS_COL, job.getStatus().toString())
+                            .value(TASK_COL, objectMapper.writeValueAsString(job.getTask()))));
+        } catch (JsonProcessingException e) {
+            throw new MessageArgumentException(ErrorCodes.JOB_UPDATE_FAILED, e, jobId);
+        };
     }
 
     private final class RowConverter implements Converter<Row, Job> {
