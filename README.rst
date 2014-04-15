@@ -77,7 +77,7 @@ How to run
 java -D<**System Property**>=<value> -jar scheduler.jar
 
 
-Example java -Dlog.directory=/opt/rivermeadow -Dserver.port=9090 -jar scheduler.jar
+Example: java -Dlog.directory=/opt/rivermeadow -Dserver.port=9090 -jar scheduler.jar
 
 Configuration
 ^^^^^^^^^^^^^
