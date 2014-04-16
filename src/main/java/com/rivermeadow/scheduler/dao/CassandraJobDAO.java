@@ -126,7 +126,7 @@ public class CassandraJobDAO implements JobDAO {
                     insertInto(JOB_BY_STATUS_SCHEDULE_TABLE)
                             .value(ID_COL, job.getId())
                             .value(SCHEDULE_COL, job.getSchedule().toDate())
-                            .value(STATUS_COL, job.getStatus().toString())
+                            .value(STATUS_COL, status)
                             .value(TASK_COL, objectMapper.writeValueAsString(job.getTask()))));
         } catch (JsonProcessingException e) {
             throw new MessageArgumentException(ErrorCodes.JOB_UPDATE_FAILED, e, jobId);
