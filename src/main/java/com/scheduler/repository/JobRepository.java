@@ -1,13 +1,11 @@
 package com.scheduler.repository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scheduler.model.Job;
 import com.scheduler.model.JobStatus;
 import com.scheduler.model.Task;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,7 +13,10 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /** Redis-backed store for job state, the pending sorted set, and the execution queue. */
 @Repository
@@ -26,6 +27,18 @@ public class JobRepository {
   private static final String PENDING_SORTED_SET = "jobs:pending";
   private static final String EXECUTION_QUEUE = "jobs:execution";
   private static final Duration TERMINAL_JOB_TTL = Duration.ofDays(7);
+
+  // Atomically: set status=QUEUED on the hash, remove from pending sorted set, push to execution
+  // list.
+  private static final RedisScript<Long> QUEUE_JOB_SCRIPT =
+      RedisScript.of(
+          """
+          redis.call('HSET', KEYS[1], 'status', ARGV[1])
+          redis.call('ZREM', KEYS[2], ARGV[2])
+          redis.call('LPUSH', KEYS[3], ARGV[2])
+          return 1
+          """,
+          Long.class);
 
   private final RedisTemplate<String, String> redisTemplate;
   private final ObjectMapper objectMapper;
@@ -46,7 +59,7 @@ public class JobRepository {
       redisTemplate
           .opsForZSet()
           .add(PENDING_SORTED_SET, job.getId().toString(), job.getScheduledAt().toEpochMilli());
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Failed to serialize job " + job.getId(), e);
     }
   }
@@ -76,16 +89,28 @@ public class JobRepository {
   }
 
   /**
-   * Returns the IDs of all jobs in the pending sorted set with a scheduled time at or before {@code
-   * maxScoreEpochMs}.
+   * Returns up to {@code limit} job IDs from the pending sorted set with a scheduled time at or
+   * before {@code maxScoreEpochMs}, ordered by score ascending.
+   *
+   * @param limit maximum number of IDs to return; use to bound queue pressure on each poll
    */
-  public Set<String> getDueJobIds(long maxScoreEpochMs) {
-    return redisTemplate.opsForZSet().rangeByScore(PENDING_SORTED_SET, 0, maxScoreEpochMs);
+  public Set<String> getDueJobIds(long maxScoreEpochMs, int limit) {
+    return redisTemplate
+        .opsForZSet()
+        .rangeByScore(PENDING_SORTED_SET, 0, maxScoreEpochMs, 0, limit);
   }
 
-  /** Pushes a job ID onto the left end of the execution queue. */
-  public void enqueueForExecution(String jobId) {
-    redisTemplate.opsForList().leftPush(EXECUTION_QUEUE, jobId);
+  /**
+   * Atomically marks the job {@code QUEUED}, removes it from the pending sorted set, and pushes its
+   * ID onto the execution queue. A single Lua script prevents split-brain if the process crashes
+   * mid-transition.
+   */
+  public void atomicQueueForExecution(String jobId) {
+    redisTemplate.execute(
+        QUEUE_JOB_SCRIPT,
+        List.of(JOB_KEY_PREFIX + jobId, PENDING_SORTED_SET, EXECUTION_QUEUE),
+        JobStatus.QUEUED.name(),
+        jobId);
   }
 
   /**
@@ -113,7 +138,7 @@ public class JobRepository {
           Instant.ofEpochMilli(
               Long.parseLong(Objects.requireNonNull(hash.createdAt(), "missing field: createdAt")));
       return new Job(id, task, schedule, status, scheduledAt, createdAt);
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException("Failed to deserialize job", e);
     }
   }

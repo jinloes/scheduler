@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scheduler.model.Job;
 import com.scheduler.model.JobStatus;
 import com.scheduler.model.ResponseCodeRange;
@@ -19,68 +18,104 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = {JobController.class, GlobalExceptionHandler.class})
 class JobControllerTest {
 
   @Autowired private MockMvc mockMvc;
-
   @Autowired private ObjectMapper objectMapper;
+  @MockitoBean private JobService jobService;
 
-  @MockBean private JobService jobService;
+  @Nested
+  class ScheduleJob {
 
-  @Test
-  void scheduleJob_returnsCreated() throws Exception {
-    Task task =
-        new Task(
-            "http://example.com/callback",
-            "POST",
-            Map.of("key", "value"),
-            List.of(new ResponseCodeRange(200, 299)));
-    Job job = new Job(task, "now");
-    when(jobService.schedule(any(Task.class), anyString())).thenReturn(job);
+    @Test
+    void returnsCreated() throws Exception {
+      Task task =
+          new Task(
+              "http://example.com/callback",
+              "POST",
+              Map.of("key", "value"),
+              List.of(new ResponseCodeRange(200, 299)),
+              null,
+              null);
+      Job job = new Job(task, "now");
+      when(jobService.schedule(any(Task.class), anyString())).thenReturn(job);
 
-    JobRequest request = new JobRequest(task, "now");
-    String body = objectMapper.writeValueAsString(request);
+      String body = objectMapper.writeValueAsString(new JobRequest(task, "now"));
+      mockMvc
+          .perform(post("/api/v1/jobs").contentType(MediaType.APPLICATION_JSON).content(body))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.id").isNotEmpty())
+          .andExpect(jsonPath("$.link").isNotEmpty());
+    }
 
-    mockMvc
-        .perform(post("/api/v1/jobs").contentType(MediaType.APPLICATION_JSON).content(body))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").isNotEmpty())
-        .andExpect(jsonPath("$.link").isNotEmpty());
+    @Test
+    void missingTask_returnsBadRequest() throws Exception {
+      mockMvc
+          .perform(
+              post("/api/v1/jobs")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"schedule\":\"now\"}"))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void invalidTaskUri_returnsBadRequest() throws Exception {
+      String body = "{\"task\":{\"uri\":\"not-a-url\",\"method\":\"POST\"},\"schedule\":\"now\"}";
+      mockMvc
+          .perform(post("/api/v1/jobs").contentType(MediaType.APPLICATION_JSON).content(body))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void invalidMethod_returnsBadRequest() throws Exception {
+      String body =
+          "{\"task\":{\"uri\":\"http://example.com\",\"method\":\"INVALID\"},\"schedule\":\"now\"}";
+      mockMvc
+          .perform(post("/api/v1/jobs").contentType(MediaType.APPLICATION_JSON).content(body))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void maxRetriesAboveLimit_returnsBadRequest() throws Exception {
+      String body =
+          "{\"task\":{\"uri\":\"http://example.com\",\"method\":\"GET\",\"max_retries\":99}"
+              + ",\"schedule\":\"now\"}";
+      mockMvc
+          .perform(post("/api/v1/jobs").contentType(MediaType.APPLICATION_JSON).content(body))
+          .andExpect(status().isBadRequest());
+    }
   }
 
-  @Test
-  void scheduleJob_missingTask_returnsBadRequest() throws Exception {
-    String body = "{\"schedule\":\"now\"}";
+  @Nested
+  class GetJob {
 
-    mockMvc
-        .perform(post("/api/v1/jobs").contentType(MediaType.APPLICATION_JSON).content(body))
-        .andExpect(status().isBadRequest());
-  }
+    @Test
+    void found_returnsOk() throws Exception {
+      UUID id = UUID.randomUUID();
+      Task task = new Task("http://example.com/callback", "POST", null, null, null, null);
+      Instant now = Instant.now();
+      Job job = new Job(id, task, "now", JobStatus.PENDING, now, now);
+      when(jobService.getById(id)).thenReturn(Optional.of(job));
 
-  @Test
-  void getJob_found_returnsOk() throws Exception {
-    UUID id = UUID.randomUUID();
-    Task task = new Task("http://example.com/callback", "POST", null, null);
-    Instant now = Instant.now();
-    Job job = new Job(id, task, "now", JobStatus.PENDING, now, now);
-    when(jobService.getById(id)).thenReturn(Optional.of(job));
+      mockMvc.perform(get("/api/v1/jobs/" + id)).andExpect(status().isOk());
+    }
 
-    mockMvc.perform(get("/api/v1/jobs/" + id)).andExpect(status().isOk());
-  }
+    @Test
+    void notFound_returns404() throws Exception {
+      UUID id = UUID.randomUUID();
+      when(jobService.getById(id)).thenReturn(Optional.empty());
 
-  @Test
-  void getJob_notFound_returns404() throws Exception {
-    UUID id = UUID.randomUUID();
-    when(jobService.getById(id)).thenReturn(Optional.empty());
-
-    mockMvc.perform(get("/api/v1/jobs/" + id)).andExpect(status().isNotFound());
+      mockMvc.perform(get("/api/v1/jobs/" + id)).andExpect(status().isNotFound());
+    }
   }
 }

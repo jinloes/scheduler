@@ -1,7 +1,7 @@
 package com.scheduler.service;
 
+import com.scheduler.config.SchedulerProperties;
 import com.scheduler.model.Job;
-import com.scheduler.model.JobStatus;
 import com.scheduler.model.Task;
 import com.scheduler.repository.JobRepository;
 import java.time.Instant;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class JobServiceImpl implements JobService {
 
   private final JobRepository jobRepository;
+  private final SchedulerProperties schedulerProperties;
 
   @Override
   public Job schedule(Task task, String schedule) {
@@ -34,13 +35,12 @@ public class JobServiceImpl implements JobService {
 
   @Override
   public void processReadyJobs() {
-    Set<String> dueJobIds = jobRepository.getDueJobIds(Instant.now().toEpochMilli());
+    Set<String> dueJobIds =
+        jobRepository.getDueJobIds(
+            Instant.now().toEpochMilli(), schedulerProperties.pollBatchSize());
     for (String jobId : dueJobIds) {
       try {
-        // updateStatus and enqueueForExecution are not atomic — if the process crashes between
-        // them, the job stays QUEUED in Redis but is never executed. Acceptable for this impl.
-        jobRepository.updateStatus(UUID.fromString(jobId), JobStatus.QUEUED);
-        jobRepository.enqueueForExecution(jobId);
+        jobRepository.atomicQueueForExecution(jobId);
         log.debug("Queued job {} for execution", jobId);
       } catch (IllegalArgumentException e) {
         log.error("Skipping malformed job ID in pending set: {}", jobId);

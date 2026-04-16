@@ -1,9 +1,5 @@
 package com.scheduler.config;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -13,6 +9,10 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.integration.support.locks.LockRegistry;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /** Spring bean configuration for Redis, HTTP client, and JSON serialization. */
 @Configuration
@@ -38,11 +38,11 @@ public class RedisConfig {
 
   @Bean
   public ObjectMapper objectMapper() {
-    return new ObjectMapper()
-        .registerModule(new JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    return JsonMapper.builder()
+        .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
         // Match Spring Boot's default so unknown fields don't cause 500s in production.
-        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .build();
   }
 
   @Bean

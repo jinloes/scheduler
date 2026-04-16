@@ -1,10 +1,14 @@
 # Scheduler
 
-A distributed job scheduler built on Redis and Spring Boot 3.3.
+A distributed job scheduler built on Redis and Spring Boot 4.0.5.
+
+## Git
+
+Do not add `Co-Authored-By` trailers to commits or PRs.
 
 ## Architecture
 
-- **Spring Boot 3.3.6** with Java 21
+- **Spring Boot 4.0.5** with Java 21
 - **Gradle** (Groovy DSL) build system
 - **Redis** for job storage, scheduling queue, and distributed locking
 
@@ -40,13 +44,12 @@ PENDING → QUEUED → RUNNING → SUCCESS / ERROR
 
 1. `POST /api/v1/jobs` saves job hash and adds ID to `jobs:pending` sorted set
 2. `JobScheduler` polls every 5 s (holding a Redis distributed lock) for due jobs
-3. Due jobs are marked `QUEUED` (removing them from `jobs:pending`) and their IDs pushed to `jobs:execution`
+3. Due jobs are atomically marked `QUEUED`, removed from `jobs:pending`, and pushed to `jobs:execution` via a single Lua script (up to `poll-batch-size` per poll)
 4. `JobExecutor` worker threads (default 4) BLPOP from `jobs:execution` and make HTTP calls
-5. Job status updated to `SUCCESS` or `ERROR` based on HTTP response code ranges
+5. Job status updated to `SUCCESS` or `ERROR` based on HTTP response code ranges; 4xx responses are non-retryable; 5xx and network errors are retried per `Task.maxRetries`
 
 ### Known limitations
 
-- **Non-atomic enqueue**: `updateStatus(QUEUED)` and `enqueueForExecution` are two separate Redis calls. A crash between them leaves the job marked `QUEUED` but never executed.
 - **No lock renewal**: `RedisLockRegistry` TTL is 30 s. If `processReadyJobs` takes longer than 30 s another instance can acquire the lock and duplicate work.
 
 ## API
@@ -62,7 +65,9 @@ Content-Type: application/json
     "uri": "https://example.com/callback",
     "method": "POST",
     "body": { "key": "value" },
-    "response_code_ranges": [{ "low": 200, "high": 299 }]
+    "response_code_ranges": [{ "low": 200, "high": 299 }],
+    "max_retries": 3,
+    "retry_backoff_ms": 1000
   },
   "schedule": "2024-12-01T10:00:00Z"
 }
@@ -103,6 +108,7 @@ GET /api/v1/jobs/{jobId}
 | `REDIS_PORT` | `6379` | — | Redis port |
 | `scheduler.poll-rate-ms` | `5000` | min 100 | Milliseconds between due-job polls (fixedDelay) |
 | `scheduler.execution-threads` | `4` | min 1 | HTTP executor thread pool size |
+| `scheduler.poll-batch-size` | `500` | min 1, max 10000 | Max due jobs fetched per poll cycle |
 
 ## Comments
 
@@ -158,7 +164,30 @@ docker run -p 6379:6379 redis:7
 ./gradlew spotlessApply
 ```
 
-**Keep tests in sync with every code change.** When adding or modifying a class, update or add the corresponding test in `src/test/java/com/scheduler/`. Each service, repository, scheduler, and controller class should have a matching test class covering its primary behavior and edge cases.
+**Keep tests in sync with every code change.** When adding or modifying a class, update or add the corresponding test in `src/test/java/com/scheduler/`.
+
+## Testing Conventions
+
+- Every public class must have a matching test class; every public method must have a `@Nested` inner class named after it
+- Test method names inside a `@Nested` class describe only the **scenario** — do not repeat the method name
+- Target 100% line and branch coverage on all business logic; infrastructure code (thread pool lifecycle, `@PostConstruct`/`@PreDestroy`, `InterruptedException` handlers) may be excluded
+- Use AssertJ `assertThat` for all assertions; avoid JUnit `assertTrue`/`assertEquals`
+- Use `@ExtendWith(MockitoExtension.class)` with field-level `@Mock`; use `lenient()` in `@BeforeEach` only for shared infrastructure stubs that not all tests exercise
+
+**Example structure:**
+
+```java
+class FooServiceTest {
+  @Nested class DoSomething {
+    @Test void succeeds_whenInputIsValid() { ... }
+    @Test void throwsWhenInputIsNull() { ... }
+  }
+
+  @Nested class DoSomethingElse {
+    @Test void returnsEmpty_whenNotFound() { ... }
+  }
+}
+```
 
 ## Package Structure
 
@@ -180,7 +209,9 @@ src/main/java/com/scheduler/
 │   └── JobServiceImpl.java          # Schedule, retrieve, and process ready jobs
 ├── scheduler/
 │   ├── JobScheduler.java            # @Scheduled poller with distributed Redis lock
-│   └── JobExecutor.java             # Thread pool blocking-polling the execution queue
+│   ├── JobExecutor.java             # Thread pool blocking-polling the execution queue
+│   ├── JobExecutionException.java   # Retryable failure during HTTP callback
+│   └── NonRetryableJobException.java # Non-retryable failure (e.g. 4xx client errors)
 └── web/
     ├── JobController.java            # POST /api/v1/jobs, GET /api/v1/jobs/{id}
     ├── JobRequest.java               # Request body for POST /api/v1/jobs
