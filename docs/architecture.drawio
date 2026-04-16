@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel compressed="false" dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Background zones -->
+    <mxCell id="2" value="Spring Boot Application" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="50" width="600" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="Redis" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="880" y="50" width="460" height="440" as="geometry" />
+    </mxCell>
+
+    <!-- API Client -->
+    <mxCell id="4" value="API Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="285" width="130" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- Web Layer -->
+    <mxCell id="5" value="Web Layer" style="text;html=1;strokeColor=none;fillColor=none;fontStyle=2;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="215" y="95" width="90" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="JobController&#xa;POST /api/v1/jobs&#xa;GET  /api/v1/jobs/{id}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="120" width="170" height="75" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="GlobalExceptionHandler&#xa;Validation errors&#xa;Bad request responses" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="415" y="120" width="170" height="75" as="geometry" />
+    </mxCell>
+
+    <!-- Service / Repository Layer -->
+    <mxCell id="8" value="Service Layer" style="text;html=1;strokeColor=none;fillColor=none;fontStyle=2;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="215" y="220" width="100" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="JobServiceImpl&#xa;schedule()&#xa;getById()&#xa;processReadyJobs()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="245" width="170" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="Repository Layer" style="text;html=1;strokeColor=none;fillColor=none;fontStyle=2;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="415" y="220" width="110" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="JobRepository&#xa;save() / findById()&#xa;getDueJobIds()&#xa;enqueueForExecution()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="415" y="245" width="170" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- Background Processing -->
+    <mxCell id="12" value="Background Processing" style="text;html=1;strokeColor=none;fillColor=none;fontStyle=2;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="215" y="355" width="150" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="JobScheduler&#xa;@Scheduled every 5 s&#xa;Redis distributed lock" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="380" width="170" height="75" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="JobExecutor&#xa;4 worker threads&#xa;BRPOP execution queue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="415" y="380" width="170" height="75" as="geometry" />
+    </mxCell>
+
+    <!-- Config -->
+    <mxCell id="15" value="RedisConfig — RedisTemplate · LockRegistry · ObjectMapper · RestTemplate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="500" width="510" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- Redis data structures -->
+    <mxCell id="16" value="job:{uuid} — Hash&#xa;id · task (JSON) · schedule · status · scheduledAt · createdAt" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="105" width="420" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="jobs:pending — Sorted Set&#xa;member = jobId,  score = scheduledAt epoch ms" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="185" width="420" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="jobs:execution — List (FIFO)&#xa;job IDs ready for HTTP execution" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="265" width="420" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="scheduler:locks — String&#xa;Distributed poll lock (30 s TTL, SET NX)" style="rounded=1;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="345" width="420" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- HTTP Target -->
+    <mxCell id="20" value="External HTTP Target&#xa;(webhook / service callback)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="570" width="200" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- Edges -->
+    <mxCell id="100" value="HTTP request" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="4" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="101" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="6" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="102" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="9" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="103" value="HSET / HGETALL" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="11" target="16" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="104" value="ZADD / ZRANGEBYSCORE" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="11" target="17" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="105" value="LPUSH" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="11" target="18" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="106" value="processReadyJobs()" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="13" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="107" value="tryLock()" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;" edge="1" source="13" target="19" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="108" value="BRPOP (blocking 1 s)" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="14" target="18" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="109" value="HTTP callback" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" source="14" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/jinloes/workspaces/scheduler && ./gradlew spotlessApply --quiet 2>/dev/null || true",
+            "statusMessage": "Applying Spotless formatting..."
+          }
+        ]
+      }
+    ]
+  }
+}
